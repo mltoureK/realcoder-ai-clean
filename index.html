@@ -1,172 +1,167 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Code Generator</title>
-<!-- This is a comment -->
-<style>
-       
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            margin: 20px;
-        }
-        textarea, select, input {
-            width: 80%;
-            margin: 5px 0;
-            font-size: 16px;
-        }
-        button {
-            padding: 10px 20px;
-            font-size: 18px; 
-            cursor: pointer;
-            margin: 10px;
-        }
-        #tabs {
-            display: flex;
-            justify-content: center;
-            margin-top: 20px;
-            gap: 10px;
-        }
-        .tab {
-            padding: 10px;
-            cursor: pointer;
-            border: 1px solid #ccc;
-            background-color: #f4f4f4;
-            border-radius: 5px;
-        }
-        .tab.active {
-            background-color: #ddd;
-            font-weight: bold;
-        }
-        #output {
-            text-align: left;
-            background-color: #f4f4f4;
-            padding: 10px;
-            border-radius: 5px;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            font-size: 14px;
-            width: 80%;
-            margin: auto;
-            overflow-x: auto;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>RealCoder.AI</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body>
 
-    <h2>AI Code Generator</h2>
-    <p>Enter your coding assignment and customize how your code is generated.</p>
+<body class="bg-zinc-900 text-black font-mono min-h-screen flex flex-col items-center px-4 py-10">
 
-    <textarea id="messageInput" rows="4" placeholder="Enter your assignment details here..."></textarea>
+  <div class="w-full max-w-3xl bg-zinc-800 rounded-xl shadow-xl p-8">
+    <h1 class="text-3xl font-bold mb-2 text-center">💻 RealCoder.AI</h1>
+    <p class="text-gray-400 text-sm text-center mb-6">Paste your assignment and customize how your code is generated.</p>
+
+    <!-- Assignment Input -->
+    <textarea id="messageInput" rows="4" placeholder="Enter your assignment instructions..."
+      class="w-full rounded-lg p-3 bg-zinc-700 border border-zinc-600 mb-4 resize-none placeholder-gray-400"></textarea>
 
     <!-- Customization Options -->
-    <label for="language">Programming Language:</label>
-    <select id="language">
-        <option value="JavaScript">JavaScript</option>
-        <option value="Python">Python</option>
-        <option value="Java">Java</option>
-        <option value="C++">C++</option>
-    </select>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
 
-    <label for="namingConvention">Naming Convention:</label>
-    <select id="namingConvention">
-        <option value="camelCase">camelCase (JavaScript, Java)</option>
-        <option value="snake_case">snake_case (Python, C++)</option>
-        <option value="PascalCase">PascalCase (Classes/Constructors)</option>
-    </select>
+      <div>
+        <label for="language" class="block text-sm font-medium mb-1">Programming Language</label>
+        <select id="language" class="w-full p-2 bg-zinc-700 border border-zinc-600 rounded-lg">
+          <option>JavaScript</option>
+          <option>Python</option>
+          <option>Java</option>
+          <option>C++</option>
+        </select>
+      </div>
 
-    <label for="commentStyle">Comment Style:</label>
-    <select id="commentStyle">
-        <option value="minimal">Minimal Comments</option>
-        <option value="detailed">Detailed Comments</option>
-        <option value="javadoc">JavaDoc (for Java)</option>
-    </select>
+      <div>
+        <label for="namingConvention" class="block text-sm font-medium mb-1">Naming Convention</label>
+        <select id="namingConvention" class="w-full p-2 bg-zinc-700 border border-zinc-600 rounded-lg">
+          <option value="camelCase">camelCase</option>
+          <option value="snake_case">snake_case</option>
+          <option value="PascalCase">PascalCase</option>
+        </select>
+      </div>
 
-    <label for="errorHandling">Error Handling:</label>
-    <input type="checkbox" id="errorHandling"> Include error handling
+      <div>
+        <label for="commentStyle" class="block text-sm font-medium mb-1">Comment Style</label>
+        <select id="commentStyle" class="w-full p-2 bg-zinc-700 border border-zinc-600 rounded-lg">
+          <option value="minimal">Minimal</option>
+          <option value="detailed">Detailed</option>
+          <option value="javadoc">JavaDoc</option>
+        </select>
+      </div>
 
-    <label for="codeComplexity">Code Complexity:</label>
-    <select id="codeComplexity">
-        <option value="beginner">Beginner (Simple Code)</option>
-        <option value="intermediate">Intermediate (Good Practices)</option>
-        <option value="advanced">Advanced (Optimized & Scalable)</option>
-    </select>
+      <div>
+        <label for="codeComplexity" class="block text-sm font-medium mb-1">Code Complexity</label>
+        <select id="codeComplexity" class="w-full p-2 bg-zinc-700 border border-zinc-600 rounded-lg">
+          <option value="beginner">Beginner</option>
+          <option value="intermediate">Intermediate</option>
+          <option value="advanced">Advanced</option>
+        </select>
+      </div>
 
-    <br>
-    <button onclick="generateCode()">Generate Code</button>
+      <div class="col-span-2 flex items-center space-x-2 mt-2">
+        <input type="checkbox" id="errorHandling" class="form-checkbox text-blue-600">
+        <label for="errorHandling">Include Error Handling</label>
+      </div>
+    </div>
 
-    <h3>Generated Code:</h3>
-    
-    <!-- Dynamic Tabs for Multiple Files -->
-    <div id="tabs"></div>
+    <!-- Button -->
+    <div class="text-center mt-6">
+      <button onclick="generateCode()" class="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-lg text-lg font-semibold">
+        🚀 Generate Code
+      </button>
+    </div>
+  </div>
 
-    <!-- File Content Display -->
-    <pre id="output">Your generated code will appear here...</pre>
+  <!-- Output Tabs -->
+  <div id="tabs" class="flex flex-wrap justify-center mt-10 space-x-2"></div>
 
-    <script>
-        async function generateCode() {
-            const message = document.getElementById("messageInput").value;
-            const language = document.getElementById("language").value;
-            const namingConvention = document.getElementById("namingConvention").value;
-            const commentStyle = document.getElementById("commentStyle").value;
-            const errorHandling = document.getElementById("errorHandling").checked ? "Include proper error handling" : "No error handling needed";
-            const codeComplexity = document.getElementById("codeComplexity").value;
+  <!-- Output Code -->
+  <pre id="output"
+    class="bg-zinc-800 mt-4 p-4 rounded-lg max-w-4xl w-full overflow-auto text-sm whitespace-pre-wrap">
+    Your generated code will appear here...
+  </pre>
 
-            // Restore original request data format
-            const requestData = {
-                message,
-                language,
-                namingConvention,
-                commentStyle,
-                errorHandling,
-                codeComplexity
-            };
+  <!-- Loading Spinner -->
+<div id="loadingSpinner" class="hidden mt-8 animate-spin text-blue-500">
+    <svg class="w-8 h-8 mx-auto" fill="none" viewBox="0 0 24 24">
+      <circle class="opacity-25" cx="12" cy="12" r="10"
+              stroke="currentColor" stroke-width="4"></circle>
+      <path class="opacity-75" fill="currentColor"
+            d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 000 16v-4l-3 3 3 3v-4a8 8 0 01-8-8z"/>
+    </svg>
+  </div>
+  
 
-            document.getElementById("output").innerText = "Generating code... Please wait.";
-            document.getElementById("tabs").innerHTML = ""; // Clear previous tabs
-
-            const response = await fetch("http://localhost:3000/sendSMS", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(requestData)
-            });
-
-            const data = await response.json();
-            
-            if (data.error) {
-                document.getElementById("output").innerText = `Error: ${data.error}`;
-                return;
-            }
-
-            const files = data.files;
-            let firstFile = true;
-
-            for (const [fileName, fileContent] of Object.entries(files)) {
-                // Create a tab for each file
-                const tab = document.createElement("div");
-                tab.classList.add("tab");
-                tab.innerText = fileName;
-
-                tab.onclick = function() {
-                    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-                    tab.classList.add("active");
-                    document.getElementById("output").innerText = fileContent;
-                };
-
-                document.getElementById("tabs").appendChild(tab);
-
-                // Display the first file by default
-                if (firstFile) {
-                    tab.classList.add("active");
-                    document.getElementById("output").innerText = fileContent;
-
-                    firstFile = false;
-                }
-            }
+  <script>
+    async function generateCode() {
+      const message = document.getElementById("messageInput").value;
+      const language = document.getElementById("language").value;
+      const namingConvention = document.getElementById("namingConvention").value;
+      const commentStyle = document.getElementById("commentStyle").value;
+      const errorHandling = document.getElementById("errorHandling").checked ? "Include proper error handling" : "No error handling needed";
+      const codeComplexity = document.getElementById("codeComplexity").value;
+  
+      const requestData = {
+        message,
+        language,
+        namingConvention,
+        commentStyle,
+        errorHandling,
+        codeComplexity
+      };
+  
+      // Show spinner
+      document.getElementById("loadingSpinner").classList.remove("hidden");
+      document.getElementById("output").innerText = "";
+      document.getElementById("tabs").innerHTML = "";
+  
+      try {
+        const response = await fetch("http://localhost:3000/sendSMS", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(requestData)
+        });
+  
+        const data = await response.json();
+  
+        if (data.error) {
+          document.getElementById("output").innerText = `Error: ${data.error}`;
+          return;
         }
-    </script>
+  
+        const files = data.files;
+        let firstFile = true;
+  
+        for (const [fileName, fileContent] of Object.entries(files)) {
+          const tab = document.createElement("button");
+          tab.className = `relative inline-flex items-center justify-center px-4 py-2 mb-2 text-sm font-medium text-white rounded-lg
+                           bg-gradient-to-br from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600
+                           focus:ring-4 focus:outline-none focus:ring-cyan-200 dark:focus:ring-cyan-800`;
+          tab.innerText = fileName;
+  
+          tab.onclick = function () {
+            document.querySelectorAll(".tab").forEach(t => t.classList.remove("ring", "ring-offset-2", "ring-cyan-400"));
+            tab.classList.add("ring", "ring-offset-2", "ring-cyan-400");
+            document.getElementById("output").innerText = fileContent;
+          };
+  
+          tab.classList.add("tab");
+          document.getElementById("tabs").appendChild(tab);
+  
+          if (firstFile) {
+            tab.classList.add("ring", "ring-offset-2", "ring-cyan-400");
+            document.getElementById("output").innerText = fileContent;
+            firstFile = false;
+          }
+        }
+  
+      } catch (err) {
+        document.getElementById("output").innerText = "An error occurred while generating code.";
+      } finally {
+        document.getElementById("loadingSpinner").classList.add("hidden");
+      }
+    }
+  </script>
+  
 
 </body>
 </html>
