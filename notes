@@ -1,0 +1,100 @@
+ apiKey: "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"
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Code Generator</title>
+    <script type="module" src="script.mjs"></script>
+    <script type="module" src="index.mjs"></script>
+    <style>
+        #tabs { display: flex; gap: 5px; margin-bottom: 10px; }
+        .tab { background: #444; color: white; padding: 5px 10px; cursor: pointer; border: none; }
+        .tab:hover { background: #666; }
+        #content { background: #f4f4f4; padding: 10px; white-space: pre-wrap; }
+       
+
+    </style>
+</head>
+<body>
+
+    <h2>AI Code Generator</h2>
+
+    <textarea id="messageInput" rows="4" cols="50" placeholder="Describe the assignment..."></textarea>
+    <br>
+
+    <label for="language">Programming Language:</label>
+    <select id="language">
+        <option value="Java">Java</option>
+        <option value="Python">Python</option>
+        <option value="JavaScript">JavaScript</option>
+    </select>
+    <br>
+
+    <label for="namingConvention">Variable Naming:</label>
+    <select id="namingConvention">
+        <option value="camelCase">camelCase</option>
+        <option value="snake_case">snake_case</option>
+        <option value="PascalCase">PascalCase</option>
+    </select>
+    <br>
+
+    <label for="commentStyle">Commenting Style:</label>
+    <select id="commentStyle">
+        <option value="Minimal">Minimal</option>
+        <option value="Standard">Standard</option>
+        <option value="Extensive">Extensive</option>
+    </select>
+    <br>
+
+    <label>
+        <input type="checkbox" id="errorHandling" checked> Include Error Handling
+    </label>
+    <br>
+
+    <label for="codeComplexity">Code Complexity:</label>
+    <select id="codeComplexity">
+        <option value="Beginner">Beginner</option>
+        <option value="Intermediate">Intermediate</option>
+        <option value="Advanced">Advanced</option>
+    </select>
+    <br>
+    
+
+    <button onclick="sendSMS()">Generate Code</button>
+
+    <h3>Generated Code:</h3>
+    <div id="output"></div>
+
+    <script>
+        async function sendSMS() {
+            const message = document.getElementById("messageInput").value;
+            const language = document.getElementById("language").value;
+            const namingConvention = document.getElementById("namingConvention").value;
+            const commentStyle = document.getElementById("commentStyle").value;
+            const errorHandling = document.getElementById("errorHandling").checked ? "Include proper error handling" : "No error handling needed";
+            const codeComplexity = document.getElementById("codeComplexity").value;
+
+            const requestData = {
+                message,
+                language,
+                namingConvention,
+                commentStyle,
+                errorHandling,
+                codeComplexity
+            };
+
+            const response = await fetch("http://localhost:3000/sendSMS", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(requestData)
+            });
+
+            const data = await response.json();
+            document.getElementById("output").innerText = data.response;
+        }
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Code Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+        textarea, select, input {
+            width: 80%;
+            margin: 5px 0;
+            font-size: 16px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 18px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        #tabs {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 10px;
+        }
+        .tab {
+            padding: 10px;
+            cursor: pointer;
+            border: 1px solid #ccc;
+            background-color: #f4f4f4;
+            border-radius: 5px;
+        }
+        .tab.active {
+            background-color: #ddd;
+            font-weight: bold;
+        }
+        #output {
+            text-align: left;
+            background-color: #f4f4f4;
+            padding: 10px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-size: 14px;
+            width: 80%;
+            margin: auto;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>AI Code Generator</h2>
+    <p>Enter your coding assignment and customize how your code is generated.</p>
+
+    <textarea id="messageInput" rows="4" placeholder="Enter your assignment details here..."></textarea>
+
+    <!-- Customization Options -->
+    <label for="language">Programming Language:</label>
+    <select id="language">
+        <option value="JavaScript">JavaScript</option>
+        <option value="Python">Python</option>
+        <option value="Java">Java</option>
+        <option value="C++">C++</option>
+    </select>
+
+    <label for="namingConvention">Naming Convention:</label>
+    <select id="namingConvention">
+        <option value="camelCase">camelCase (JavaScript, Java)</option>
+        <option value="snake_case">snake_case (Python, C++)</option>
+        <option value="PascalCase">PascalCase (Classes/Constructors)</option>
+    </select>
+
+    <label for="commentStyle">Comment Style:</label>
+    <select id="commentStyle">
+        <option value="minimal">Minimal Comments</option>
+        <option value="detailed">Detailed Comments</option>
+        <option value="javadoc">JavaDoc (for Java)</option>
+    </select>
+
+    <label for="errorHandling">Error Handling:</label>
+    <input type="checkbox" id="errorHandling"> Include error handling
+
+    <label for="codeComplexity">Code Complexity:</label>
+    <select id="codeComplexity">
+        <option value="beginner">Beginner (Simple Code)</option>
+        <option value="intermediate">Intermediate (Good Practices)</option>
+        <option value="advanced">Advanced (Optimized & Scalable)</option>
+    </select>
+
+    <br>
+    <button onclick="generateCode()">Generate Code</button>
+
+    <h3>Generated Code:</h3>
+    
+    <!-- Dynamic Tabs for Multiple Files -->
+    <div id="tabs"></div>
+
+    <!-- File Content Display -->
+    <pre id="output">Your generated code will appear here...</pre>
+
+    <script>
+        async function generateCode() {
+            const message = document.getElementById("messageInput").value;
+            const language = document.getElementById("language").value;
+            const namingConvention = document.getElementById("namingConvention").value;
+            const commentStyle = document.getElementById("commentStyle").value;
+            const errorHandling = document.getElementById("errorHandling").checked ? "Include proper error handling" : "No error handling needed";
+            const codeComplexity = document.getElementById("codeComplexity").value;
+
+            // Restore original request data format
+            const requestData = {
+                message,
+                language,
+                namingConvention,
+                commentStyle,
+                errorHandling,
+                codeComplexity
+            };
+
+            document.getElementById("output").innerText = "Generating code... Please wait.";
+            document.getElementById("tabs").innerHTML = ""; // Clear previous tabs
+
+            const response = await fetch("http://localhost:3000/sendSMS", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(requestData)
+            });
+
+            const data = await response.json();
+            
+            if (data.error) {
+                document.getElementById("output").innerText = `Error: ${data.error}`;
+                return;
+            }
+
+            const files = data.files;
+            let firstFile = true;
+
+            for (const [fileName, fileContent] of Object.entries(files)) {
+                // Create a tab for each file
+                const tab = document.createElement("div");
+                tab.classList.add("tab");
+                tab.innerText = fileName;
+
+                tab.onclick = function() {
+                    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+                    tab.classList.add("active");
+                    document.getElementById("output").innerText = fileContent;
+                };
+
+                document.getElementById("tabs").appendChild(tab);
+
+                // Display the first file by default
+                if (firstFile) {
+                    tab.classList.add("active");
+                    document.getElementById("output").innerText = fileContent;
+
+                    firstFile = false;
+                }
+            }
+        }
+    </script>
+
+</body>
+</html>
