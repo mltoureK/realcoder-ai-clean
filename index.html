@@ -6,8 +6,12 @@
   <title>RealCoder.AI</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 
+
   <!-- CodeMirror -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+  
+  <!-- CodeMirror material theme-->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/material.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/javascript/javascript.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/python/python.min.js"></script>
@@ -111,7 +115,7 @@
       codeEditor = CodeMirror.fromTextArea(document.getElementById("codeOutputEditor"), {
         lineNumbers: true,
         mode: "javascript",
-        theme: "default",
+        theme: "material",
         tabSize: 2,
         viewportMargin: Infinity
       });
