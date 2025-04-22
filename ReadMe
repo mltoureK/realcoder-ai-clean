@@ -1,0 +1,110 @@
+🚀 Stealth Code Wrapper - Local Dev Guide
+
+Hey 👋 This project started for my brother to test locally, but I’m building this to be big. 
+
+This repo powers Stealth Code Wrapper, an AI-powered tool that generates stealthy, humanized code using the OpenAI API — with a built-in editor, customization controls, and an upcoming quiz-based learning system.
+
+I built this to help students complete their assignments, with real humanized code, and learn while doing so.  
+
+📁 Project Structure
+
+📦 stealth-code-wrapper
+├── public/                # Frontend UI
+│   └── index.html         # Main HTML file
+├── script.js              # Frontend logic (editor, events)
+├── server.js              # Express server (API routes)
+├── .env                   # Store your OpenAI API key here
+├── package.json           # Node config
+└── README.md              # This file 🙌
+
+⚙️ Requirements
+
+Node.js v18+
+
+npm (or yarn)
+
+OpenAI API key (get one here)
+
+🛠️ Setup (Local)
+
+1. Clone the repo
+
+git clone https://github.com/yourusername/stealth-code-wrapper.git
+cd stealth-code-wrapper
+
+2. Install dependencies
+
+npm install
+
+3. Add your .env
+
+Create a file named .env and paste in:
+
+OPENAI_API_KEY=sk-your-key-here
+
+⚠️ Never share this key. Treat it like a password.
+
+4. Run the backend
+
+node server.js
+
+Output: Server running on port 3000
+
+5. Launch the frontend
+
+Open public/index.html in your browser.
+
+Or run:
+
+npx serve public
+
+Visit: http://localhost:5000
+
+🔌 Available API Endpoints
+
+POST /sendSMS
+
+Generates stealthified code based on assignment + user config.
+
+POST /generateQuiz
+
+(Optional) Builds a multiple-choice quiz based on the code.
+
+🔮 Current Features
+
+🧠 AI code generation (OpenAI-powered)
+
+✍️ CodeMirror editor with syntax highlighting
+
+🗂 File tabs for multi-file projects
+
+⚙️ User customization for comments, complexity, naming style
+
+🎮 Learning system (coming soon!)
+
+🧠 Troubleshooting
+
+CORS error → make sure frontend + backend are on same port or use proxy
+
+Fetch failed → check server is running on port 3000
+
+OpenAI API error → check your key + usage limit here: OpenAI dashboard
+
+✨ Deployment Tips
+
+Frontend → Vercel (free, drag-and-drop)
+
+Backend → Render.com (Node.js server)
+
+Or host both with Netlify + custom Express proxy
+
+💬 Questions?
+
+Ping me or leave an issue. If you’re my brother  text me 😎
+
+
+
+This is my shot at building something huge.
+If you're reading this and we made it  we really did it.
+
+Let's go make something worth sharing. 💼🔥
