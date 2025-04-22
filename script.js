@@ -39,7 +39,7 @@ async function generateCode() {
 
       for (const [fileName, fileContent] of Object.entries(files)) {
         const tab = document.createElement("button");
-        tab.className = `relative inline-flex items-center justify-center px-4 py-2 mb-2 text-sm font-medium text-white rounded-lg
+        tab.className = `relative inline-flex items-center justify-center px-4 py-2 mb-2 text-sm font-medium text-black rounded-lg
                          bg-gradient-to-br from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600
                          focus:ring-4 focus:outline-none focus:ring-cyan-200 dark:focus:ring-cyan-800`;
         tab.innerText = fileName;

@@ -5,6 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>RealCoder.AI</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
+  <!-- CodeMirror -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/javascript/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/python/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/clike/clike.min.js"></script>
+  <style>
+    .CodeMirror {
+      height: auto;
+      background-color: #1e1e1e;
+      color: #d4d4d4;
+      font-family: monospace;
+    }
+  </style>
 </head>
 
 <body class="bg-zinc-900 text-black font-mono min-h-screen flex flex-col items-center px-4 py-10">
@@ -65,7 +80,7 @@
 
     <!-- Button -->
     <div class="text-center mt-6">
-      <button onclick="generateCode()" class="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-lg text-lg font-semibold">
+      <button id="generateButton" class="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-lg text-lg font-semibold">
         🚀 Generate Code
       </button>
     </div>
@@ -74,27 +89,112 @@
   <!-- Output Tabs -->
   <div id="tabs" class="flex flex-wrap justify-center mt-10 space-x-2"></div>
 
-  <!-- Output Code -->
-  <pre id="output"
-    class="bg-zinc-800 mt-4 p-4 rounded-lg max-w-4xl w-full overflow-auto text-sm whitespace-pre-wrap">
-    Your generated code will appear here...
-  </pre>
+  <!-- Code Output Editor -->
+  <div id="codeEditorContainer" class="bg-zinc-800 mt-4 p-2 rounded-lg max-w-4xl w-full">
+    <textarea id="codeOutputEditor"></textarea>
+  </div>
 
   <!-- Loading Spinner -->
-<div id="loadingSpinner" class="hidden mt-8 animate-spin text-blue-500">
+  <div id="loadingSpinner" class="hidden mt-8 animate-spin text-blue-500">
     <svg class="w-8 h-8 mx-auto" fill="none" viewBox="0 0 24 24">
-      <circle class="opacity-25" cx="12" cy="12" r="10"
-              stroke="currentColor" stroke-width="4"></circle>
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
       <path class="opacity-75" fill="currentColor"
             d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 000 16v-4l-3 3 3 3v-4a8 8 0 01-8-8z"/>
     </svg>
   </div>
-  
 
-  <script src="script.js">
-   
+  <script>
+    
+    let codeEditor;
+
+    document.addEventListener("DOMContentLoaded", function () {
+      codeEditor = CodeMirror.fromTextArea(document.getElementById("codeOutputEditor"), {
+        lineNumbers: true,
+        mode: "javascript",
+        theme: "default",
+        tabSize: 2,
+        viewportMargin: Infinity
+      });
+
+      document.getElementById("generateButton").addEventListener("click", generateCode);
+    });
+
+    async function generateCode() {
+      const message = document.getElementById("messageInput").value;
+      const language = document.getElementById("language").value;
+      const namingConvention = document.getElementById("namingConvention").value;
+      const commentStyle = document.getElementById("commentStyle").value;
+      const errorHandling = document.getElementById("errorHandling").checked ? "Include proper error handling" : "No error handling needed";
+      const codeComplexity = document.getElementById("codeComplexity").value;
+
+      const requestData = {
+        message,
+        language,
+        namingConvention,
+        commentStyle,
+        errorHandling,
+        codeComplexity
+      };
+
+      document.getElementById("loadingSpinner").classList.remove("hidden");
+      document.getElementById("tabs").innerHTML = "";
+
+      try {
+        const response = await fetch("http://localhost:3000/sendSMS", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(requestData)
+        });
+
+        const data = await response.json();
+        if (data.error) {
+          alert(`Error: ${data.error}`);
+          return;
+        }
+
+        const files = data.files;
+        let firstFile = true;
+
+        for (const [fileName, fileContent] of Object.entries(files)) {
+          const tab = document.createElement("button");
+          tab.className =
+  "tab px-4 py-2 mb-2 text-sm font-medium text-black bg-zinc-700 hover:bg-zinc-600 rounded-lg ring-1 ring-zinc-500";
+;
+          tab.innerText = fileName;
+
+          tab.onclick = function () {
+            document.querySelectorAll(".tab").forEach((t) =>
+              t.classList.remove("ring", "ring-offset-2", "ring-cyan-400")
+            );
+            tab.classList.add("ring", "ring-offset-2", "ring-cyan-400");
+
+            const ext = fileName.split(".").pop();
+            const modeMap = {
+              js: "javascript",
+              py: "python",
+              java: "text/x-java",
+              cpp: "text/x-c++src"
+            };
+            const mode = modeMap[ext] || "javascript";
+
+            codeEditor.setOption("mode", mode);
+            codeEditor.setValue(fileContent);
+          };
+
+          document.getElementById("tabs").appendChild(tab);
+
+          if (firstFile) {
+            tab.click();
+            firstFile = false;
+          }
+        }
+      } catch (err) {
+        alert("An error occurred while generating code.");
+        console.error(err);
+      } finally {
+        document.getElementById("loadingSpinner").classList.add("hidden");
+      }
+    }
   </script>
-  
-
 </body>
 </html>
