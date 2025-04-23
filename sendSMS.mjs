@@ -67,40 +67,41 @@ app.post("/generateQuiz", async (req, res) => {
   }
 
   const prompt = `
-You are an expert programming instructor. Based on the following ${language} code, generate 10 high-quality quiz cards that help a student deeply understand key parts of the code. Focus on meaningful logic, control flow, DOM manipulation, interactivity, and how parts work together.
+You are an expert programming instructor. Based on the following ${language} code, generate 10 challenging quiz cards.
 
 For drag-and-drop:
-- Use it for rearranging code steps to match logical execution or function flow.
-- Provide multiple options and a correct sequence in "answer".
+- Focus only on **pure code logic** (no HTML or markup).
+- Ask the student to reconstruct the **correct order of statements** for a function.
+- Options should be realistic lines like: "for (...) {", "return x;", "if (condition) {", "die.roll();", etc.
+- The "answer" array must reflect the correct logical execution order.
+- DO NOT use UI or text content like labels, inputs, HTML tags, or visual layout.
 
 For multiple-choice:
-- Create challenging and realistic distractors — avoid obvious or trivial answers.
-- Mix up functions, syntax, and concept-level understanding.
-- Example: "What does create() do?" should be replaced with deeper logic like "What kind of data structure is returned by create()?"
+- Make the question deeply conceptual. Do NOT use the explanation field.
+- Include tricky but valid distractors. No low-effort answers.
 
-Each card must follow this JSON format:
+Format:
 {
-  "snippet": "short code snippet",
-  "explanation": "clearly explains what it does",
+  "snippet": "optional short snippet for context",
   "quiz": {
     "type": "drag-and-drop" | "multiple-choice" | "fill-in-the-blank",
-    "question": "Well-written, challenging question based on the snippet",
-    "options": ["Option A", "Option B", "Option C"],
-    "answer": ["Correct Answer"] // Always use an array for drag-and-drop
+    "question": "Clear and logical",
+    "options": ["..."],
+    "answer": ["..."]
   }
 }
 Here is the code:
 \`\`\`${language}
 ${code}
 \`\`\`
-Return only the JSON array — no intro, no outro, no explanation.
+Return ONLY the JSON array of quiz cards. No markdown, explanation, or summaries.
 `;
 
   try {
     const completion = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
-        { role: "system", content: "You generate quizzes from student code in clean JSON format." },
+        { role: "system", content: "You generate quizzes from student code. Return valid JSON only." },
         { role: "user", content: prompt }
       ],
       temperature: 0.5,
@@ -110,7 +111,6 @@ Return only the JSON array — no intro, no outro, no explanation.
     let text = completion.choices[0].message.content.trim();
     console.log("Raw response from OpenAI:\n", text);
 
-    // Extract JSON content between markdown code block if present
     const match = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
     if (match) {
       text = match[1].trim();
@@ -118,6 +118,11 @@ Return only the JSON array — no intro, no outro, no explanation.
 
     try {
       const quizCards = JSON.parse(text);
+      quizCards.forEach(card => {
+        if (card.quiz && card.quiz.answer && !Array.isArray(card.quiz.answer)) {
+          card.quiz.answer = [card.quiz.answer];
+        }
+      });
       res.json({ quizCards });
     } catch (parseError) {
       console.error("❌ Failed to parse OpenAI response:", parseError.message);
