@@ -67,33 +67,43 @@ app.post("/generateQuiz", async (req, res) => {
   }
 
   const prompt = `
-You are an expert programming instructor. Based on the following ${language} code, generate 10 learning quiz cards.
+You are an expert programming instructor. Based on the following ${language} code, generate 10 high-quality quiz cards that help a student deeply understand key parts of the code. Focus on meaningful logic, control flow, DOM manipulation, interactivity, and how parts work together.
+
+For drag-and-drop:
+- Use it for rearranging code steps to match logical execution or function flow.
+- Provide multiple options and a correct sequence in "answer".
+
+For multiple-choice:
+- Create challenging and realistic distractors — avoid obvious or trivial answers.
+- Mix up functions, syntax, and concept-level understanding.
+- Example: "What does create() do?" should be replaced with deeper logic like "What kind of data structure is returned by create()?"
+
 Each card must follow this JSON format:
 {
   "snippet": "short code snippet",
-  "explanation": "what it does",
+  "explanation": "clearly explains what it does",
   "quiz": {
     "type": "drag-and-drop" | "multiple-choice" | "fill-in-the-blank",
-    "question": "Question text",
+    "question": "Well-written, challenging question based on the snippet",
     "options": ["Option A", "Option B", "Option C"],
-    "answer": "Correct Answer"
+    "answer": ["Correct Answer"] // Always use an array for drag-and-drop
   }
 }
 Here is the code:
 \`\`\`${language}
 ${code}
 \`\`\`
-Only return raw JSON array of cards — no extra text.
+Return only the JSON array — no intro, no outro, no explanation.
 `;
 
   try {
     const completion = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
-        { role: "system", content: "You generate quizzes from code in structured JSON format." },
+        { role: "system", content: "You generate quizzes from student code in clean JSON format." },
         { role: "user", content: prompt }
       ],
-      temperature: 0.6,
+      temperature: 0.5,
       max_tokens: 1800
     });
 
