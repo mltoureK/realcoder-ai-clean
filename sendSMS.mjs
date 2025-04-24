@@ -1,3 +1,5 @@
+// Main Server launcher
+
 import OpenAI from "openai";
 import express from "express";
 import cors from "cors";
