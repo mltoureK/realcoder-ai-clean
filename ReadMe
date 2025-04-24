@@ -57,11 +57,7 @@ Output: Server running on port 3000
 
 Open public/index.html in your browser.
 
-Or run:
 
-npx serve public
-
-Visit: http://localhost:5000
 
 🔌 Available API Endpoints
 
