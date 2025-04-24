@@ -45,6 +45,9 @@ OPENAI_API_KEY=sk-your-key-here
 ⚠️ Never share this key. Treat it like a password.
 
 4. Run the backend
+Open sendSMS.mjs
+Run Terminal command
+node sendSMS.mjs
 
 node server.js
 
@@ -68,7 +71,8 @@ Generates stealthified code based on assignment + user config.
 
 POST /generateQuiz
 
-(Optional) Builds a multiple-choice quiz based on the code.
+ Builds a  quiz based on the code with qeustion type: Multiple choice, drag-n-drop.
+ Input Question coming soon.
 
 🔮 Current Features
 
@@ -80,7 +84,7 @@ POST /generateQuiz
 
 ⚙️ User customization for comments, complexity, naming style
 
-🎮 Learning system (coming soon!)
+🎮 Learning system
 
 🧠 Troubleshooting
 
