@@ -2,7 +2,7 @@
 
 Hey 👋 This project started for my brother to test locally, but I’m building this to be big. 
 
-This repo powers Stealth Code Wrapper, an AI-powered tool that generates stealthy, humanized code using the OpenAI API — with a built-in editor, customization controls, and an upcoming quiz-based learning system.
+This repo powers Real Coder AIer, an AI-powered tool that generates , humanized code using the OpenAI API — with a built-in editor, customization controls, and a quiz-based learning system that forces you to learn from your GPT coding assignments.
 
 I built this to help students complete their assignments, with real humanized code, and learn while doing so.  
 
@@ -12,6 +12,7 @@ I built this to help students complete their assignments, with real humanized co
 ├── public/                # Frontend UI
 │   └── index.html         # Main HTML file
 ├── script.js              # Frontend logic (editor, events)
+├── SendSMS.js             # Node JS Server API Request Logic
 ├── server.js              # Express server (API routes)
 ├── .env                   # Store your OpenAI API key here
 ├── package.json           # Node config
@@ -21,9 +22,8 @@ I built this to help students complete their assignments, with real humanized co
 
 Node.js v18+
 
-npm (or yarn)
 
-OpenAI API key (get one here)
+OpenAI API key (get one here: https://openai.com/index/openai-api/)
 
 🛠️ Setup (Local)
 
@@ -96,7 +96,7 @@ OpenAI API error → check your key + usage limit here: OpenAI dashboard
 
 ✨ Deployment Tips
 
-Frontend → Vercel (free, drag-and-drop)
+Frontend → Javascript w/ Vercel deployment (free, drag-and-drop)
 
 Backend → Render.com (Node.js server)
 
