@@ -60,48 +60,62 @@ app.post("/sendSMS", async (req, res) => {
 });
 
 app.post("/generateQuiz", async (req, res) => {
-  const { code, language } = req.body;
+  const { code, language, message } = req.body;
 
-  if (!code || !language) {
-    return res.status(400).json({ error: "Missing code or language." });
+  if (!code || !language || !message) {
+    return res.status(400).json({ error: "Missing code, language, or assignment message." });
   }
 
   const prompt = `
-You are an expert programming instructor. Based on the following ${language} code, generate 10 challenging quiz cards.
+The student was given this assignment: ${message}
+Below is their code solution in ${language}.
 
-For drag-and-drop:
-- Focus only on **pure code logic** (no HTML or markup).
-- Ask the student to reconstruct the **correct order of statements** for a function.
-- Options should be realistic lines like: "for (...) {", "return x;", "if (condition) {", "die.roll();", etc.
-- The "answer" array must reflect the correct logical execution order.
-- DO NOT use UI or text content like labels, inputs, HTML tags, or visual layout.
+Generate 10 highly relevant and challenging quiz cards to test their understanding of the exact concepts used in the assignment and code. 
 
-For multiple-choice:
-- Make the question deeply conceptual. Do NOT use the explanation field.
-- Include tricky but valid distractors. No low-effort answers.
+Focus the questions around:
+- The code's actual logic and structure
+- Key methods, APIs, or syntax used
+- Things they should have learned by doing this assignment
 
-Format:
+**Examples:**
+- If they used fetch() → quiz them on HTTP methods, response parsing, async behavior
+- If SVG is involved → ask about attributes, rendering, viewBox
+- If it’s a loop-heavy assignment → ask about loop behavior, break/continue, scope
+
+**Drag-and-Drop:**
+- Use only code lines. No HTML. Force them to reconstruct the logic.
+
+**Multiple-Choice:**
+- Distractors should be confusing but valid. No "dumb" answers.
+- Avoid giving away the answer in the question or structure
+
+**Each quiz must be in this format:**
 {
-  "snippet": "optional short snippet for context",
+  "snippet": "(optional short snippet)",
   "quiz": {
     "type": "drag-and-drop" | "multiple-choice" | "fill-in-the-blank",
-    "question": "Clear and logical",
+    "question": "Challenging question based on the code",
     "options": ["..."],
-    "answer": ["..."]
+    "answer": ["..."],
+    "resource": {
+      "title": "Concept to review",
+      "link": "https://developer.mozilla.org/..."
+    }
   }
 }
+
 Here is the code:
 \`\`\`${language}
 ${code}
 \`\`\`
-Return ONLY the JSON array of quiz cards. No markdown, explanation, or summaries.
+Only return the JSON array. No markdown. No explanation. No intros.
 `;
 
   try {
     const completion = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
-        { role: "system", content: "You generate quizzes from student code. Return valid JSON only." },
+        { role: "system", content: "You generate quizzes from code. Focus on the code and the assignment. Output JSON only." },
         { role: "user", content: prompt }
       ],
       temperature: 0.5,
@@ -109,25 +123,17 @@ Return ONLY the JSON array of quiz cards. No markdown, explanation, or summaries
     });
 
     let text = completion.choices[0].message.content.trim();
-    console.log("Raw response from OpenAI:\n", text);
-
     const match = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-    if (match) {
-      text = match[1].trim();
-    }
+    if (match) text = match[1].trim();
 
-    try {
-      const quizCards = JSON.parse(text);
-      quizCards.forEach(card => {
-        if (card.quiz && card.quiz.answer && !Array.isArray(card.quiz.answer)) {
-          card.quiz.answer = [card.quiz.answer];
-        }
-      });
-      res.json({ quizCards });
-    } catch (parseError) {
-      console.error("❌ Failed to parse OpenAI response:", parseError.message);
-      res.status(500).json({ error: "Failed to parse quiz from OpenAI" });
-    }
+    const quizCards = JSON.parse(text);
+    quizCards.forEach(card => {
+      if (card.quiz && card.quiz.answer && !Array.isArray(card.quiz.answer)) {
+        card.quiz.answer = [card.quiz.answer];
+      }
+    });
+
+    res.json({ quizCards });
   } catch (error) {
     console.error("Quiz Gen Error:", error);
     res.status(500).json({ error: "Failed to generate quiz." });

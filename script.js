@@ -90,7 +90,9 @@ async function generateQuiz() {
     return;
   }
 
-  const requestData = { code, language };
+  const message = document.getElementById("messageInput").value;
+  const requestData = { code, language, message };
+  
 
   document.getElementById("loadingSpinner").classList.remove("hidden");
   document.getElementById("quizContainer").innerHTML = "";
