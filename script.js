@@ -82,8 +82,6 @@ async function generateCode() {
 }
 
 async function generateQuiz() {
-  
-
   const code = codeEditor.getValue();
   const language = document.getElementById("language").value;
 
@@ -118,49 +116,77 @@ async function generateQuiz() {
 
       const questionId = `quiz-${index}`;
 
-      let quizContent = "";
-      if (card.quiz.type === "drag-and-drop") {
-        quizContent = `
-          <div class="sortable-options space-y-2 p-2 bg-zinc-800 rounded" id="${questionId}">
-            ${card.quiz.options.map(opt => `<div class="p-2 bg-zinc-600 rounded cursor-move">${opt}</div>`).join('')}
-          </div>
-          <button onclick="checkDragOrder('${questionId}', '${card.quiz.answer}')"
-            class="mt-2 px-3 py-1 text-sm bg-blue-500 hover:bg-blue-600 rounded">✅ Check Order</button>
-        `;
-      } else if (card.quiz.type === "multiple-choice") {
-        quizContent = `
-          ${card.quiz.options.map(opt => `
-            <div>
-              <input type="radio" name="q${index}" value="${opt}" />
-              <label>${opt}</label>
-            </div>`).join('')}
-          <button onclick="alert('Answer: ${card.quiz.answer}')"
-            class="mt-2 px-3 py-1 text-sm bg-blue-500 hover:bg-blue-600 rounded">✅ Reveal Answer</button>
-        `;
-      } else {
-        quizContent = `
-          <input type="text" class="w-full p-2 rounded bg-zinc-800 border border-zinc-600" placeholder="Your answer...">
-          <button onclick="alert('Answer: ${card.quiz.answer}')"
-            class="mt-2 px-3 py-1 text-sm bg-blue-500 hover:bg-blue-600 rounded">✅ Reveal Answer</button>
-        `;
-      }
-
       cardEl.innerHTML = `
         <h2 class="font-semibold text-white mb-2">Card ${index + 1}</h2>
-        <pre class="bg-zinc-800 p-2 rounded text-gray-300 text-sm mb-2">${card.snippet}</pre>
-        <p class="text-gray-300 mb-2">${card.explanation}</p>
+        <pre class="bg-zinc-800 p-2 rounded text-gray-300 text-sm mb-2">${card.snippet || ''}</pre>
         <strong class="text-white">Question:</strong>
         <p class="text-gray-200 mb-2">${card.quiz.question}</p>
-        ${quizContent}
       `;
 
-      container.appendChild(cardEl);
-
       if (card.quiz.type === "drag-and-drop") {
-        new Sortable(document.getElementById(questionId), {
+        const quizBox = document.createElement("div");
+        quizBox.className = "sortable-options space-y-2 p-2 bg-zinc-800 rounded";
+        quizBox.id = questionId;
+
+        card.quiz.options.forEach(opt => {
+          const line = document.createElement("div");
+          line.className = "p-2 bg-zinc-600 rounded cursor-move";
+          line.textContent = opt;
+          quizBox.appendChild(line);
+        });
+
+        const button = document.createElement("button");
+        button.textContent = "✅ Check Order";
+        button.className = "mt-2 px-3 py-1 text-sm bg-blue-500 hover:bg-blue-600 rounded";
+        button.addEventListener("click", () => {
+          checkDragOrder(questionId, card.quiz.answer);
+        });
+
+        cardEl.appendChild(quizBox);
+        cardEl.appendChild(button);
+
+        new Sortable(quizBox, {
           animation: 150
         });
+
+      } else if (card.quiz.type === "multiple-choice") {
+        card.quiz.options.forEach(opt => {
+          const wrapper = document.createElement("div");
+          const input = document.createElement("input");
+          input.type = "radio";
+          input.name = `q${index}`;
+          input.value = opt;
+          const label = document.createElement("label");
+          label.textContent = opt;
+          wrapper.appendChild(input);
+          wrapper.appendChild(label);
+          cardEl.appendChild(wrapper);
+        });
+
+        const button = document.createElement("button");
+        button.textContent = "✅ Reveal Answer";
+        button.className = "mt-2 px-3 py-1 text-sm bg-blue-500 hover:bg-blue-600 rounded";
+        button.addEventListener("click", () => {
+          alert(`Answer: ${card.quiz.answer}`);
+        });
+        cardEl.appendChild(button);
+
+      } else {
+        const input = document.createElement("input");
+        input.type = "text";
+        input.className = "w-full p-2 rounded bg-zinc-800 border border-zinc-600";
+        input.placeholder = "Your answer...";
+        const button = document.createElement("button");
+        button.textContent = "✅ Reveal Answer";
+        button.className = "mt-2 px-3 py-1 text-sm bg-blue-500 hover:bg-blue-600 rounded";
+        button.addEventListener("click", () => {
+          alert(`Answer: ${card.quiz.answer}`);
+        });
+        cardEl.appendChild(input);
+        cardEl.appendChild(button);
       }
+
+      container.appendChild(cardEl);
     });
   } catch (err) {
     console.error("Quiz Error:", err);
@@ -170,9 +196,20 @@ async function generateQuiz() {
   }
 }
 
-function checkDragOrder(containerId, correctAnswer) {
+function checkDragOrder(containerId, correctAnswerArray) {
   const container = document.getElementById(containerId);
-  const currentOrder = Array.from(container.children).map(el => el.innerText.trim()).join(", ");
-  const isCorrect = currentOrder === correctAnswer;
-  alert(isCorrect ? "✅ Correct Order!" : `❌ Wrong order.\nExpected: ${correctAnswer}`);
+  const userOrder = Array.from(container.children).map(el => el.innerText.trim());
+
+  const isCorrect =
+    userOrder.length === correctAnswerArray.length &&
+    userOrder.every((line, i) => line === correctAnswerArray[i]);
+
+  const oldResult = container.parentElement.querySelector(".check-result");
+  if (oldResult) oldResult.remove();
+
+  const result = document.createElement("div");
+  result.className = "check-result mt-2 font-semibold";
+  result.textContent = isCorrect ? "✅ Correct!" : "❌ Incorrect. Try again!";
+  result.classList.add(isCorrect ? "text-green-500" : "text-red-500");
+  container.parentElement.appendChild(result);
 }
