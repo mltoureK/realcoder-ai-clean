@@ -45,11 +45,7 @@ OPENAI_API_KEY=sk-your-key-here
 ⚠️ Never share this key. Treat it like a password.
 
 4. Run the backend
-Open sendSMS.mjs
-Run Terminal command
-node sendSMS.mjs
-
-node server.js
+npm run dev
 
 Output: Server running on port 3000
 
