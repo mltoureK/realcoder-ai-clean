@@ -29,12 +29,12 @@
     <script type="module" src="/src/main.ts"></script>
 
   </head>
-  <body class="dark bg-zinc-800">
+  <body class="dark bg-zinc-800 min-h-screen flex items-center justify-center p-4">
     <div class="w-full max-w-3xl bg-zinc-800 rounded-xl shadow-xl p-8">
       <h1 class="text-3xl font-bold mb-2 text-center text-white">💻 RealCoder.AI</h1>
       <p class="text-gray-400 text-sm text-center mb-6">Paste your assignment and customize how your code is generated.</p>
 
-      <textarea id="messageInput" rows="4" placeholder="Enter your assignment instructions..."
+      <textarea class="w-full h-40 big-zinc-700 border border-zinc-600 ring-1 ring-transparent focus:ring-2 focus:ring-blue-500 rounded lg p-3 text-white" id="messageInput" rows="4" placeholder="Enter your assignment instructions..."
         class="w-full rounded-lg p-3 bg-zinc-700 border border-zinc-600 mb-4 resize-none placeholder-gray-400 text-white"></textarea>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -87,6 +87,10 @@
           🧠 Generate Quiz
         </button>
       </div>
+
+      <div id="codeEditorContainer" class="bg-zinc-800 mt-4 p-2 rounded-lg max-w-4xl w-full">
+        <textarea id="codeOutputEditor"></textarea>
+      </div>
     </div>
 
    
@@ -94,9 +98,7 @@
     <div id="quizContainer" class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4"></div>
     <div id="tabs" class="flex flex-wrap justify-center mt-10 space-x-2"></div>
 
-    <div id="codeEditorContainer" class="bg-zinc-800 mt-4 p-2 rounded-lg max-w-4xl w-full">
-      <textarea id="codeOutputEditor"></textarea>
-    </div>
+    
 
     <div id="loadingSpinner" class="hidden mt-8 animate-spin text-blue-500">
       <svg class="w-8 h-8 mx-auto" fill="none" viewBox="0 0 24 24">
