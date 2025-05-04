@@ -38,7 +38,7 @@ const CodeEditor: FC<CodeEditorProps> = ({ mode = 'javascript', value, onChange 
     }
     , [value]);
 
-    return <textarea ref={textareaRef} rows={10} className="w-full mb-4" />;
+    return <textarea ref={textareaRef} className="w-full mb-4" />;
 };
 
 export default CodeEditor;
