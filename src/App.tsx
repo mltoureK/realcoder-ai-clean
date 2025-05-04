@@ -100,7 +100,11 @@ export default function App() {
                 onGenerateQuiz={onGenerateQuiz}
                 loading={loading}
             />
-            <div className="flex flex-wrap gap-2 mb-4">
+
+            {/* {Code editor with tabs above} */}
+
+            <div className="bg-zinc-700 mt-6 p-4 rounded-lg w-full">
+                <div className="flex space-x-2 mb-4">
                 {Object.keys(files).map((name) => (
                     <button
                         key={name}
@@ -108,8 +112,10 @@ export default function App() {
                         className={` px-3 py-1 rounded ${selectedFile === name ? 'bg-cyan-500 text-black' : 'bg-zinc-600 text-white'}`}
                         > {name}</button>
                 ))}
+                </div>
+                <CodeEditor mode={language.toLowerCase()} value={code} onChange={setCode} />
             </div>
-            <CodeEditor mode={language.toLowerCase()} value={code} onChange={setCode} />
+            
             {/* QuizGrid goes here */}
         </div>
     );
