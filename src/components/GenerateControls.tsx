@@ -115,7 +115,7 @@ const GenerateControls: FC<GenerateControlsProps> = ({
             <div className="col-span-1 md:col-span-2 flex items-center">
                 <input
                     id="errorHandling"
-                    type="chcekbox"
+                    type="checkbox"
                     checked={includeErrorHandling}
                     onChange={(e) => onChange('includeErrorHandling', e.target.checked)}
                     className="form-checkbox text-blue-600 h-4 w-4 rounded focus:ring-blue-500"
@@ -129,8 +129,16 @@ const GenerateControls: FC<GenerateControlsProps> = ({
         <div className="flex space-x-4">
             <button
                 onClick={onGenerateCode}
+                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:opacity-50"
                 disabled={loading}
-                className="flex-1 bg-bluie-600 hover:bg-blue-700 px-6 py-2 rounded-lg text-lg font-semibold text-white disabled:opacity-50"
+            >
+                🚀 Generate Code
+            </button>
+            
+            <button
+                onClick={onGenerateQuiz}
+                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 disabled:opacity-50"
+                disabled={loading}
             >
                 🧠 Generate Quiz
             </button>
