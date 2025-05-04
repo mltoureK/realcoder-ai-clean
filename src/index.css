@@ -1,2 +1,12 @@
 /* public/tailwind.css */
 @import 'tailwindcss';
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+.CodeMirror {
+    height: auto;
+    background-color: #1e1e1e;
+    color: #d4d4d4;
+    font-family: monospace;
+}
