@@ -1,5 +1,10 @@
 import React, {useState } from 'react';
 import GenerateControls from './components/GenerateControls';
+import CodeEditor from './components/CodeEditor';
+
+interface GeneratedFiles{
+    [filename: string]: string;
+}
 
 export default function App() {
     const [message, setMessage] = useState('');
@@ -9,38 +14,75 @@ export default function App() {
     const [codeComplexity, setCodeComplexity] = useState('beginner');
     const [includeErrorHandling, setIncludeErrorHandling] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [files, setFiles] = useState<GeneratedFiles>({});
+    const [selectedFile, setSelectedFile] = useState<string>('');
+    const [code, setCode] = useState('');
 
     const handleChange = (field: string, value: string | boolean) => {
         switch (field) {
-            case 'message':
-                setMessage(value as string);
-                break;
-            case 'language':
-                setLanguage(value as string);
-                break;
-            case 'namingConvention':
-                setNamingConvention(value as string);
-                break;
-            case 'commentStyle':
-                setCommentStyle(value as string);
-                break;
-            case 'codeComplexity':
-                setCodeComplexity(value as string);
-                break;
-            case 'includeErrorHandling':
-                setIncludeErrorHandling(value as boolean);
-                break;
+            case 'message':setMessage(value as string);break;
+            case 'language':setLanguage(value as string);break;
+            case 'namingConvention':setNamingConvention(value as string);break;
+            case 'commentStyle':setCommentStyle(value as string);break;
+            case 'codeComplexity':setCodeComplexity(value as string);break;
+            case 'includeErrorHandling':setIncludeErrorHandling(value as boolean);break;
         }
     };
 
-    const onGenerateCode = () => {
+    const onGenerateCode = async () => {
         setLoading(true);
-        // TODO: call API
+        try{
+            const res = await fetch('/sendSMS', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    message,
+                    language,
+                    namingConvention,
+                    commentStyle,
+                    errorHandling: includeErrorHandling ? 'include proper error handling' : 'no error handling needed',
+                    codeComplexity
+                }),
+            });
+            const data = await res.json();
+            if (data.error) throw new Error(data.error);
+            setFiles(data.files);
+            const first = Object.keys(data.files)[0] || '';
+            setSelectedFile(first);
+            setCode(data.files[first] || '');
+        }catch (err: any){
+            alert(err.message || 'Failed to generate code');
+        } finally {
+            setLoading(false);
+        }
+        setLoading(false);
     };
 
-    const onGenerateQuiz = () => {
+    const onGenerateQuiz = async () => {
         setLoading(true);
-        // TODO: call API
+        try {
+            const res = await fetch('/generateQuiz', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    code,
+                    language,
+                    message
+                }),
+            });
+            const data = await res.json();
+            if (data.error) throw new Error(data.error);
+            console.log('Quiz cards:', data.quizCards);
+            // TODO: render quiz cards in a QuizGrid component
+        }catch (err: any) {
+            alert(err.message || 'Failed to generate quiz');
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -58,7 +100,17 @@ export default function App() {
                 onGenerateQuiz={onGenerateQuiz}
                 loading={loading}
             />
-            {/* EditorPane and QuizGrid go here */}
+            <div className="flex flex-wrap gap-2 mb-4">
+                {Object.keys(files).map((name) => (
+                    <button
+                        key={name}
+                        onClick={() => {setSelectedFile(name); setCode(files[name]); }}
+                        className={` px-3 py-1 rounded ${selectedFile === name ? 'bg-cyan-500 text-black' : 'bg-zinc-600 text-white'}`}
+                        > {name}</button>
+                ))}
+            </div>
+            <CodeEditor mode={language.toLowerCase()} value={code} onChange={setCode} />
+            {/* QuizGrid goes here */}
         </div>
     );
 }
