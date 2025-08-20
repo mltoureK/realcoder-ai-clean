@@ -34,6 +34,18 @@
       <h1 class="text-3xl font-bold mb-2 text-center text-white">💻 RealCoder.AI</h1>
       <p class="text-gray-400 text-sm text-center mb-6">Paste your assignment and customize how your code is generated.</p>
 
+      <div class="mb-6">
+        <label class="block text-sm font-medium mb-1 text-white">Upload Code Folder</label>
+        <input type="file" id="folderInput" webkitdirectory directory multiple class="mb-4 w-full p-2 bg-zinc-700 border border-zinc-600 rounded-lg text-white" />
+        <div class="mt-4">
+          <label class="block text-sm font-medium mb-1 text-white">Or enter a public GitHub repo URL</label>
+          <div class="flex space-x-2">
+            <input type="text" id="repoUrlInput" placeholder="https://github.com/user/repo" class="w-full p-2 bg-zinc-700 border border-zinc-600 rounded-lg text-white" />
+            <button id="loadRepoButton" class="bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-lg text-white">Load Repo</button>
+          </div>
+        </div>
+      </div>
+      
       <textarea class="w-full h-40 big-zinc-700 border border-zinc-600 ring-1 ring-transparent focus:ring-2 focus:ring-blue-500 rounded lg p-3 text-white" id="messageInput" rows="4" placeholder="Enter your assignment instructions..."
         class="w-full rounded-lg p-3 bg-zinc-700 border border-zinc-600 mb-4 resize-none placeholder-gray-400 text-white"></textarea>
 
@@ -45,6 +57,22 @@
             <option>Python</option>
             <option>Java</option>
             <option>C++</option>
+            <option>C#</option>
+            <option>TypeScript</option>
+            <option>Go</option>
+            <option>Rust</option>
+            <option>Ruby</option>
+            <option>PHP</option>
+            <option>Swift</option>
+            <option>Kotlin</option>
+            <option>Scala</option>
+            <option>Perl</option>
+            <option>R</option>
+            <option>MATLAB</option>
+            <option>Objective-C</option>
+            <option>Shell</option>
+            <option>SQL</option>
+            <option>Dart</option>
           </select>
         </div>
         <div>
