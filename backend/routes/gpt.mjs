@@ -24,8 +24,8 @@ router.post('/sendSMS', async (req, res) => {
   router.post('/generateQuiz', async (req, res) => {
     const { code, language, message } = req.body;
   
-    if (!code || !language || !message) {
-      return res.status(400).json({ error: "Missing code, language, or assignment message." });
+    if (!code || !language) {
+      return res.status(400).json({ error: "Missing code or language." });
     }
   
     try {
