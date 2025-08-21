@@ -4,7 +4,24 @@ let codeEditor;
 // Remove code editor and assignment instructions logic
 // Add logic for folder upload and repo input
 
-const BACKEND_URL = "http://localhost:3000";
+const BACKEND_URL = "http://localhost:3000"; // Connect directly to backend
+
+// Helper function to score file relevance for quiz generation
+function getFileRelevanceScore(filename) {
+  let score = 0;
+  
+  // Higher priority for main source files
+  if (filename.includes('main.') || filename.includes('index.') || filename.includes('app.')) score += 10;
+  if (filename.includes('src/')) score += 5;
+  if (filename.includes('components/')) score += 3;
+  if (filename.includes('utils/') || filename.includes('helpers/')) score += 2;
+  
+  // Lower priority for config files
+  if (filename.includes('config') || filename.includes('package.json')) score -= 5;
+  if (filename.includes('README') || filename.includes('.md')) score -= 3;
+  
+  return score;
+}
 
 document.addEventListener("DOMContentLoaded", function () {
   document.getElementById("folderInput").addEventListener("change", handleFolderUpload);
@@ -28,31 +45,120 @@ async function handleFolderUpload(event) {
 
 async function handleRepoLoad() {
   console.log("Load Repo button clicked");
-  const repoUrl = document.getElementById("repoUrlInput").value;
+  const repoUrl = document.getElementById("repoUrlInput").value.trim();
   console.log("Repo URL:", repoUrl);
   if (!repoUrl) return alert("Please enter a repo URL.");
-  
+
   try {
-    console.log("Sending request to:", `${BACKEND_URL}/fetchRepo`);
-    const response = await fetch(`${BACKEND_URL}/fetchRepo`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ repoUrl })
-    });
-    
-    console.log("Response status:", response.status);
-    const data = await response.json();
-    console.log("Response data:", data);
-    
-    if (data.error) {
-      alert(`Error: ${data.error}`);
+    // Parse owner/repo from URL
+    const m = repoUrl.match(/github\.com\/(?:.+?\/)?([^\/]+)\/([^\/#?]+)/);
+    if (!m) {
+      alert("Invalid GitHub URL. Expected format: https://github.com/<owner>/<repo>");
       return;
     }
+    const owner = m[1];
+    const repo = m[2];
+
+    // Show spinner
+    const spinner = document.getElementById("loadingSpinner");
+    if (spinner) spinner.classList.remove("hidden");
+
+    const apiHeaders = { 'Accept': 'application/vnd.github+json' };
+
+    // 1) Get repo info to discover default branch
+    const repoResp = await fetch(`https://api.github.com/repos/${owner}/${repo}`, { headers: apiHeaders });
+    if (!repoResp.ok) {
+      const text = await repoResp.text();
+      throw new Error(`Failed to load repo metadata: ${repoResp.status} ${text}`);
+    }
+    const repoInfo = await repoResp.json();
+    const ref = repoInfo.default_branch || 'main';
+
+    // 2) Get the full tree for default branch
+    const treeResp = await fetch(`https://api.github.com/repos/${owner}/${repo}/git/trees/${encodeURIComponent(ref)}?recursive=1`, { headers: apiHeaders });
+    if (!treeResp.ok) {
+      const text = await treeResp.text();
+      throw new Error(`Failed to list repo tree: ${treeResp.status} ${text}`);
+    }
+    const treeJson = await treeResp.json();
+    const tree = Array.isArray(treeJson.tree) ? treeJson.tree : [];
+
+    // 3) Filter to code-like files (exclude node_modules and large files)
+    const allowed = ['.js', '.mjs', '.ts', '.jsx', '.tsx', '.json', '.md', '.html', '.css'];
+    const isAllowed = (p) => allowed.some(ext => p.toLowerCase().endsWith(ext));
+    const isRelevant = (p) => !p.includes('node_modules') && !p.includes('.d.ts') && !p.includes('package-lock.json');
+    const blobs = tree.filter(node => 
+      node.type === 'blob' && 
+      isAllowed(node.path) && 
+      isRelevant(node.path)
+    );
+
+    // 4) Fetch raw contents with size limits
+    const maxFiles = 100; // Reduced from 200
+    const maxFileSize = 100000; // 100KB per file
+    const maxTotalSize = 5000000; // 5MB total
+    let totalSize = 0;
+    const files = [];
     
-    alert(data.message || "Repo files loaded successfully!");
+    for (const node of blobs.slice(0, maxFiles)) {
+      const rawUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${encodeURIComponent(ref)}/${node.path}`;
+      try {
+        const r = await fetch(rawUrl);
+        if (!r.ok) continue;
+        const content = await r.text();
+        
+        // Check file size
+        if (content.length > maxFileSize) {
+          console.warn(`Skipping large file: ${node.path} (${content.length} bytes)`);
+          continue;
+        }
+        
+        // Check total size
+        if (totalSize + content.length > maxTotalSize) {
+          console.warn(`Reached total size limit, stopping at ${files.length} files`);
+          break;
+        }
+        
+        files.push({ name: node.path, content });
+        totalSize += content.length;
+      } catch (e) {
+        console.warn("Failed fetching", node.path, e);
+      }
+    }
+
+    if (files.length === 0) {
+      alert("No code files found in this repository.");
+      if (spinner) spinner.classList.add("hidden");
+      return;
+    }
+
+    // 5) Check payload size before uploading
+    const payload = JSON.stringify({ files });
+    const payloadSize = new Blob([payload]).size;
+    console.log(`Payload size: ${payloadSize} bytes (${(payloadSize / 1024 / 1024).toFixed(2)} MB)`);
+    
+    if (payloadSize > 5000000) { // 5MB limit
+      throw new Error(`Payload too large: ${(payloadSize / 1024 / 1024).toFixed(2)} MB. Try a smaller repository or fewer files.`);
+    }
+    
+    // 6) Upload to backend storage
+    const uploadResp = await fetch(`${BACKEND_URL}/uploadFiles`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: payload
+    });
+    if (!uploadResp.ok) {
+      const text = await uploadResp.text();
+      throw new Error(`Failed to store files: ${uploadResp.status} ${text}`);
+    }
+
+    alert(`Fetched and stored ${files.length} files from ${owner}/${repo}@${ref}`);
   } catch (error) {
     console.error("Repo load error:", error);
-    alert("Failed to load repository. Please check the URL and try again.");
+    alert(error.message || "Failed to load repository. Please check the URL and try again.");
+  } finally {
+    const spinner = document.getElementById("loadingSpinner");
+    if (spinner) spinner.classList.add("hidden");
   }
 }
 
@@ -64,9 +170,43 @@ async function generateQuizFromStoredFiles() {
     alert("No files uploaded or repo loaded.");
     return;
   }
-  // For demo: concatenate all file contents
-  const code = files.map(f => `// ${f.name}\n${f.content}`).join("\n\n");
+
+  // Language-specific file extensions
+  const languageExtensions = {
+    'javascript': ['.js', '.mjs', '.jsx', '.ts', '.tsx'],
+    'python': ['.py', '.pyw', '.pyx', '.pyi'],
+    'java': ['.java'],
+    'cpp': ['.cpp', '.cc', '.cxx', '.hpp', '.h'],
+    'csharp': ['.cs']
+  };
+
+  // Filter files by selected language
+  const languageExts = languageExtensions[language.toLowerCase()] || ['.js', '.mjs', '.jsx', '.ts', '.tsx'];
+  const languageFiles = files.filter(file => 
+    languageExts.some(ext => file.name.toLowerCase().endsWith(ext))
+  );
+
+  if (languageFiles.length === 0) {
+    alert(`No ${language} files found in the uploaded repository. Try uploading a repository with ${language} files.`);
+    return;
+  }
+
+  // Select most relevant files for quiz generation (prioritize main source files)
+  const relevantFiles = languageFiles
+    .filter(f => !f.name.includes('node_modules') && !f.name.includes('.d.ts'))
+    .sort((a, b) => {
+      // Prioritize main source files
+      const aScore = getFileRelevanceScore(a.name);
+      const bScore = getFileRelevanceScore(b.name);
+      return bScore - aScore;
+    })
+    .slice(0, 10); // Limit to 10 most relevant files
+  
+  const code = relevantFiles.map(f => `// ${f.name}\n${f.content}`).join("\n\n");
   const requestData = { code, language, message: "Generate quiz questions based on the uploaded code files" };
+  
+  console.log(`Generating ${language} quiz from ${relevantFiles.length} files:`, relevantFiles.map(f => f.name));
+  
   document.getElementById("loadingSpinner").classList.remove("hidden");
   document.getElementById("quizContainer").innerHTML = "";
   try {

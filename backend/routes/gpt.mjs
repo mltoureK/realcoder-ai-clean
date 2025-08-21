@@ -28,12 +28,27 @@ router.post('/sendSMS', async (req, res) => {
       return res.status(400).json({ error: "Missing code or language." });
     }
   
+    console.log(`Generating quiz for language: ${language}, code length: ${code.length}`);
+  
     try {
-      const quizCards = await generateQuizFromCode(code, language, message);
+      // Limit code size to prevent OpenAI rate limits
+      const maxCodeLength = 50000; // 50KB limit
+      let limitedCode = code;
+      
+      if (code.length > maxCodeLength) {
+        console.log(`Code too large (${code.length} chars), truncating to ${maxCodeLength} chars`);
+        limitedCode = code.substring(0, maxCodeLength) + '\n\n// ... (truncated due to size limits)';
+      }
+      
+      console.log('Calling generateQuizFromCode...');
+      const quizCards = await generateQuizFromCode(limitedCode, language, message);
+      console.log('Quiz generation successful, returning cards:', quizCards.length);
       res.json({ quizCards });
     } catch (err) {
       console.error("Quiz Gen Error:", err);
-      res.status(500).json({ error: "Failed to generate quiz." });
+      console.error("Error details:", err.message);
+      console.error("Error stack:", err.stack);
+      res.status(500).json({ error: "Failed to generate quiz.", details: err.message });
     }
   });
 
