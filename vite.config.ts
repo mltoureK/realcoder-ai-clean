@@ -4,7 +4,7 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineConfig({
   root: './',
   plugins: [
-    tailwindcss(),      // ← runs Tailwind as a Vite plugin :contentReference[oaicite:0]{index=0}
+    tailwindcss(),
   ],
   server: {
     port: 5173,
@@ -14,6 +14,14 @@ export default defineConfig({
         changeOrigin: true,
       },
       '/generateQuiz': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
+      '/uploadFiles': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
+      '/fetchRepo': {
         target: 'http://localhost:3000',
         changeOrigin: true,
       },

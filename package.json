@@ -9,7 +9,9 @@
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "start": "NODE_ENV=production node backend/index.mjs",
+    "deploy": "npm run build && npm start"
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4.1.4",
