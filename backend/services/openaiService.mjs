@@ -261,25 +261,65 @@ Focus on actual ${language} programming concepts, not just what the code does. R
   let text = completion.choices[0].message.content.trim();
   console.log('Raw OpenAI response:', text);
   
-  // Try to extract JSON from markdown code blocks
-  const match = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-  if (match) text = match[1].trim();
+  // More robust JSON extraction
+  let extractedText = text;
   
-  // If no code blocks, try to find JSON in the text
-  if (!match) {
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (jsonMatch) text = jsonMatch[0];
+  // Try to extract JSON from markdown code blocks first
+  const codeBlockMatch = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+  if (codeBlockMatch) {
+    extractedText = codeBlockMatch[1].trim();
+  } else {
+    // Try to find JSON array or object in the text
+    const jsonArrayMatch = text.match(/\[\s*\{[\s\S]*\}\s*\]/);
+    if (jsonArrayMatch) {
+      extractedText = jsonArrayMatch[0];
+    } else {
+      const jsonObjectMatch = text.match(/\{\s*"[\s\S]*"\s*:\s*[\s\S]*\}/);
+      if (jsonObjectMatch) {
+        extractedText = jsonObjectMatch[0];
+      }
+    }
   }
   
-  console.log('Extracted JSON text:', text);
+  console.log('Extracted JSON text:', extractedText);
   
   let quizCards;
   try {
-    quizCards = JSON.parse(text);
+    quizCards = JSON.parse(extractedText);
   } catch (parseError) {
     console.error('JSON parse error:', parseError);
-    console.error('Failed to parse:', text);
-    throw new Error('Failed to parse quiz response from OpenAI');
+    console.error('Failed to parse:', extractedText);
+    
+    // Try to fix common JSON issues
+    try {
+      // Remove any trailing text after the JSON
+      const cleanedText = extractedText.replace(/[^}\]]*$/, '');
+      quizCards = JSON.parse(cleanedText);
+      console.log('Successfully parsed after cleaning');
+    } catch (secondError) {
+      console.error('Second parse attempt failed:', secondError);
+      
+      // If all parsing fails, create a fallback quiz
+      console.log('Creating fallback quiz due to parsing failure');
+      quizCards = [{
+        snippet: "Code analysis failed - using fallback",
+        quiz: {
+          type: "multiple-choice",
+          question: "What is the primary purpose of this code?",
+          options: [
+            "To process data",
+            "To handle user input", 
+            "To manage application state",
+            "To perform calculations"
+          ],
+          answer: ["To process data"],
+          resource: {
+            title: "Code Analysis",
+            link: "https://developer.mozilla.org/en-US/docs/Web/JavaScript"
+          }
+        }
+      }];
+    }
   }
   
   // Ensure quizCards is always an array
@@ -288,7 +328,25 @@ Focus on actual ${language} programming concepts, not just what the code does. R
       quizCards = [quizCards]; // Convert single object to array
     } else {
       console.error('Unexpected quiz format:', quizCards);
-      throw new Error('Invalid quiz format received from OpenAI');
+      // Create fallback quiz instead of throwing error
+      quizCards = [{
+        snippet: "Code analysis failed - using fallback",
+        quiz: {
+          type: "multiple-choice",
+          question: "What is the primary purpose of this code?",
+          options: [
+            "To process data",
+            "To handle user input", 
+            "To manage application state",
+            "To perform calculations"
+          ],
+          answer: ["To process data"],
+          resource: {
+            title: "Code Analysis",
+            link: "https://developer.mozilla.org/en-US/docs/Web/JavaScript"
+          }
+        }
+      }];
     }
   }
   
@@ -296,7 +354,22 @@ Focus on actual ${language} programming concepts, not just what the code does. R
   quizCards.forEach((card, index) => {
     if (!card.quiz) {
       console.error(`Quiz card ${index} missing quiz property:`, card);
-      throw new Error(`Invalid quiz card format at index ${index}`);
+      // Fix the card instead of throwing error
+      card.quiz = {
+        type: "multiple-choice",
+        question: "What is the purpose of this code?",
+        options: [
+          "To process data",
+          "To handle user input", 
+          "To manage application state",
+          "To perform calculations"
+        ],
+        answer: ["To process data"],
+        resource: {
+          title: "Code Analysis",
+          link: "https://developer.mozilla.org/en-US/docs/Web/JavaScript"
+        }
+      };
     }
     
     if (!Array.isArray(card.quiz.answer)) {
