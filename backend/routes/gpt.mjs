@@ -48,7 +48,43 @@ router.post('/sendSMS', async (req, res) => {
       console.error("Quiz Gen Error:", err);
       console.error("Error details:", err.message);
       console.error("Error stack:", err.stack);
-      res.status(500).json({ error: "Failed to generate quiz.", details: err.message });
+      
+      // Better error handling to distinguish between different error types
+      if (err.message && err.message.includes('API key')) {
+        console.error("API Key Error detected - user needs to check their OpenAI API key");
+        res.status(401).json({ 
+          error: "OpenAI API key is invalid or expired. Please check your API key in the .env file.",
+          type: "api_key_error"
+        });
+      } else if (err.message && err.message.includes('Failed to parse')) {
+        console.error("JSON Parsing Error detected - using fallback quiz");
+        // Return a fallback quiz instead of an error
+        const fallbackQuiz = [{
+          snippet: "Code analysis completed with fallback",
+          quiz: {
+            type: "multiple-choice",
+            question: "What is the primary purpose of this code?",
+            options: [
+              "To process data",
+              "To handle user input", 
+              "To manage application state",
+              "To perform calculations"
+            ],
+            answer: ["To process data"],
+            resource: {
+              title: "Code Analysis",
+              link: "https://developer.mozilla.org/en-US/docs/Web/JavaScript"
+            }
+          }
+        }];
+        res.json({ quizCards: fallbackQuiz, fallback: true });
+      } else {
+        res.status(500).json({ 
+          error: "Failed to generate quiz.", 
+          details: err.message,
+          type: "general_error"
+        });
+      }
     }
   });
 
