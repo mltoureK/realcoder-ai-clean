@@ -44,6 +44,7 @@ npm install
 Create a file named .env and paste in:
 
 OPENAI_API_KEY=sk-your-key-here
+GITHUB_TOKEN = ghp-your-github-token-here
 
 ⚠️ Never share this key. Treat it like a password.
 
@@ -62,7 +63,7 @@ Open public/index.html in your browser.
 
 POST /sendSMS
 
-Generates stealthified code based on assignment + user config.
+Generates  code based on repo + user config.
 
 POST /generateQuiz
 
