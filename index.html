@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>RealCoder.AI</title>
 
-    <!-- <link href="/src/index.css" rel="stylesheet"> -->
+    <!-- Import CSS -->
+    <link href="/src/index.css" rel="stylesheet">
 
     <!-- CodeMirror -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
@@ -26,84 +27,81 @@
       }
     </style>
 
-    <script type="module" src="/src/main.ts"></script>
+    <script type="module" src="/src/script.js"></script>
 
   </head>
   <body class="dark bg-zinc-800 min-h-screen flex items-center justify-center p-4">
-    <div class="w-full max-w-3xl bg-zinc-800 rounded-xl shadow-xl p-8">
-      <h1 class="text-3xl font-bold mb-2 text-center text-white">💻 RealCoder.AI</h1>
-      <p class="text-gray-400 text-sm text-center mb-6">Paste your assignment and customize how your code is generated.</p>
+    <div class="main-container">
+      <div class="form-section">
+        <h1 class="text-3xl font-bold mb-2 text-center text-white">💻 RealCoder.AI</h1>
+        <p class="text-gray-400 text-sm text-center mb-6">Paste your assignment and customize how your code is generated.</p>
 
-      <div class="mb-6">
-        <label class="block text-sm font-medium mb-1 text-white">Upload Code Folder</label>
-        <input type="file" id="folderInput" webkitdirectory directory multiple class="mb-4 w-full p-2 bg-zinc-700 border border-zinc-600 rounded-lg text-white" />
-        <div class="mt-4">
-          <label class="block text-sm font-medium mb-1 text-white">Or enter a public GitHub repo URL</label>
-          <div class="flex space-x-2">
-            <input type="text" id="repoUrlInput" placeholder="https://github.com/user/repo" class="w-full p-2 bg-zinc-700 border border-zinc-600 rounded-lg text-white" />
-            <button id="loadRepoButton" class="bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-lg text-white">Load Repo</button>
+        <div class="mb-6">
+          <label class="form-label">Upload Code Folder</label>
+          <input type="file" id="folderInput" webkitdirectory directory multiple class="form-input mb-4" />
+          <div class="mt-4">
+            <label class="form-label">Or enter a public GitHub repo URL</label>
+            <div class="flex space-x-2">
+              <input type="text" id="repoUrlInput" placeholder="https://github.com/user/repo" class="form-input" />
+              <button id="loadRepoButton" class="btn-primary">Load Repo</button>
+            </div>
           </div>
         </div>
-      </div>
-      
-      <!-- Assignment instructions textarea and code editor removed as requested -->
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div>
+            <label for="language" class="form-label">Programming Language</label>
+            <select id="language" class="form-select">
+              <option>JavaScript</option>
+              <option>Python</option>
+              <option>Java</option>
+              <option>C++</option>
+              <option>C#</option>
+              <option>TypeScript</option>
+              <option>Go</option>
+              <option>Rust</option>
+              <option>Ruby</option>
+              <option>PHP</option>
+              <option>Swift</option>
+              <option>Kotlin</option>
+              <option>Scala</option>
+              <option>Perl</option>
+              <option>R</option>
+              <option>MATLAB</option>
+              <option>Objective-C</option>
+              <option>Shell</option>
+              <option>SQL</option>
+              <option>Dart</option>
+            </select>
+          </div>
+        </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-        <div>
-          <label for="language" class="block text-sm font-medium mb-1 text-white">Programming Language</label>
-          <select id="language" class="w-full p-2 bg-zinc-700 border border-zinc-600 rounded-lg text-white">
-            <option>JavaScript</option>
-            <option>Python</option>
-            <option>Java</option>
-            <option>C++</option>
-            <option>C#</option>
-            <option>TypeScript</option>
-            <option>Go</option>
-            <option>Rust</option>
-            <option>Ruby</option>
-            <option>PHP</option>
-            <option>Swift</option>
-            <option>Kotlin</option>
-            <option>Scala</option>
-            <option>Perl</option>
-            <option>R</option>
-            <option>MATLAB</option>
-            <option>Objective-C</option>
-            <option>Shell</option>
-            <option>SQL</option>
-            <option>Dart</option>
-          </select>
+        <div class="text-center mt-6">
+          <button id="generateQuizButton" class="btn-secondary">
+            🧠 Generate Quiz
+          </button>
         </div>
       </div>
 
-      <div class="text-center mt-6">
-        <button id="generateButton" class="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-lg text-lg font-semibold text-white">
-          🚀 Generate Code
-        </button>
-      </div>
-      <div class="text-center mt-4">
-        <button id="generateQuizButton" class="bg-green-600 hover:bg-green-700 px-6 py-2 rounded-lg text-lg font-semibold text-white">
-          🧠 Generate Quiz
-        </button>
+      <!-- Loading Spinner -->
+      <div id="loadingSpinner" class="hidden text-center mt-8">
+        <div class="loading-spinner"></div>
+        <p class="text-gray-400 mt-2">Loading...</p>
       </div>
 
-      <!-- Assignment instructions textarea and code editor removed as requested -->
+      <!-- Progress Bar -->
+      <div id="progressContainer" class="hidden mt-8">
+        <div class="progress-bar-container">
+          <div class="progress-bar-fill" id="progressBarFill"></div>
+        </div>
+        <p class="text-gray-400 mt-2 text-center" id="progressText">Generating quiz questions...</p>
+      </div>
+
+      <!-- Quiz Container -->
+      <div id="quizContainer" class="quiz-grid"></div>
+      
+      <!-- Tabs Container -->
+      <div id="tabs" class="flex flex-wrap justify-center mt-10 space-x-2"></div>
     </div>
-
-   
-
-    <div id="quizContainer" class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4"></div>
-    <div id="tabs" class="flex flex-wrap justify-center mt-10 space-x-2"></div>
-
-    
-
-    <div id="loadingSpinner" class="hidden mt-8 animate-spin text-blue-500">
-      <svg class="w-8 h-8 mx-auto" fill="none" viewBox="0 0 24 24">
-        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-        <path class="opacity-75" fill="currentColor"
-              d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 000 16v-4l-3 3 3 3v-4a8 8 0 01-8-8z"/>
-      </svg>
-    </div>
-
   </body>
 </html>

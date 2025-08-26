@@ -1,32 +1,22 @@
+// Import modular services and components
+import { FileProcessor } from './services/fileProcessor.js';
+import { QuizGenerator } from './services/quizGenerator.js';
+import { QuizCard } from './components/QuizCard.js';
+import { getLanguageConfig } from './utils/languageConfig.js';
+
 let codeEditor;
 
-// Remove all dropdowns except programming language
-// Remove code editor and assignment instructions logic
-// Add logic for folder upload and repo input
+// Initialize services
+const fileProcessor = new FileProcessor();
+const quizGenerator = new QuizGenerator();
 
 const BACKEND_URL = "http://localhost:3000"; // Connect directly to backend
-
-// Helper function to score file relevance for quiz generation
-function getFileRelevanceScore(filename) {
-  let score = 0;
-  
-  // Higher priority for main source files
-  if (filename.includes('main.') || filename.includes('index.') || filename.includes('app.')) score += 10;
-  if (filename.includes('src/')) score += 5;
-  if (filename.includes('components/')) score += 3;
-  if (filename.includes('utils/') || filename.includes('helpers/')) score += 2;
-  
-  // Lower priority for config files
-  if (filename.includes('config') || filename.includes('package.json')) score -= 5;
-  if (filename.includes('README') || filename.includes('.md')) score -= 3;
-  
-  return score;
-}
 
 document.addEventListener("DOMContentLoaded", function () {
   document.getElementById("folderInput").addEventListener("change", handleFolderUpload);
   document.getElementById("loadRepoButton").addEventListener("click", handleRepoLoad);
   document.getElementById("generateQuizButton").addEventListener("click", generateQuizFromStoredFiles);
+  document.getElementById("generateFunctionVariantButton").addEventListener("click", generateFunctionVariantQuiz);
 });
 
 async function handleFolderUpload(event) {
@@ -35,6 +25,15 @@ async function handleFolderUpload(event) {
     name: file.webkitRelativePath,
     content: await file.text()
   })));
+  
+  // Use file processor to validate payload size
+  try {
+    fileProcessor.validatePayloadSize(fileData);
+  } catch (error) {
+    alert(error.message);
+    return;
+  }
+  
   await fetch(`${BACKEND_URL}/uploadFiles`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -83,10 +82,10 @@ async function handleRepoLoad() {
     const treeJson = await treeResp.json();
     const tree = Array.isArray(treeJson.tree) ? treeJson.tree : [];
 
-    // 3) Filter to code-like files (exclude node_modules and large files)
+    // 3) Filter to code-like files using file processor
     const allowed = ['.js', '.mjs', '.ts', '.jsx', '.tsx', '.json', '.md', '.html', '.css'];
     const isAllowed = (p) => allowed.some(ext => p.toLowerCase().endsWith(ext));
-    const isRelevant = (p) => !p.includes('node_modules') && !p.includes('.d.ts') && !p.includes('package-lock.json');
+    const isRelevant = (p) => !fileProcessor.isIrrelevantFile(p);
     const blobs = tree.filter(node => 
       node.type === 'blob' && 
       isAllowed(node.path) && 
@@ -164,147 +163,137 @@ async function handleRepoLoad() {
 
 async function generateQuizFromStoredFiles() {
   const language = document.getElementById("language").value;
-  const res = await fetch(`${BACKEND_URL}/getStoredFiles`);
-  const { files } = await res.json();
-  if (!files || files.length === 0) {
-    alert("No files uploaded or repo loaded.");
-    return;
-  }
-
-  // Language-specific file extensions
-  const languageExtensions = {
-    'javascript': ['.js', '.mjs', '.jsx', '.ts', '.tsx'],
-    'python': ['.py', '.pyw', '.pyx', '.pyi'],
-    'java': ['.java'],
-    'cpp': ['.cpp', '.cc', '.cxx', '.hpp', '.h'],
-    'csharp': ['.cs']
-  };
-
-  // Filter files by selected language
-  const languageExts = languageExtensions[language.toLowerCase()] || ['.js', '.mjs', '.jsx', '.ts', '.tsx'];
-  const languageFiles = files.filter(file => 
-    languageExts.some(ext => file.name.toLowerCase().endsWith(ext))
-  );
-
-  if (languageFiles.length === 0) {
-    alert(`No ${language} files found in the uploaded repository. Try uploading a repository with ${language} files.`);
-    return;
-  }
-
-  // Select most relevant files for quiz generation (prioritize main source files)
-  const relevantFiles = languageFiles
-    .filter(f => !f.name.includes('node_modules') && !f.name.includes('.d.ts'))
-    .sort((a, b) => {
-      // Prioritize main source files
-      const aScore = getFileRelevanceScore(a.name);
-      const bScore = getFileRelevanceScore(b.name);
-      return bScore - aScore;
-    })
-    .slice(0, 10); // Limit to 10 most relevant files
   
-  const code = relevantFiles.map(f => `// ${f.name}\n${f.content}`).join("\n\n");
-  const requestData = { code, language, message: "Generate quiz questions based on the uploaded code files" };
-  
-  console.log(`Generating ${language} quiz from ${relevantFiles.length} files:`, relevantFiles.map(f => f.name));
-  
-  document.getElementById("loadingSpinner").classList.remove("hidden");
-  document.getElementById("quizContainer").innerHTML = "";
   try {
-    const response = await fetch(`${BACKEND_URL}/generateQuiz`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(requestData)
-    });
-    const data = await response.json();
-    if (data.error) {
-      alert(`Error: ${data.error}`);
+    // Show progress bar
+    showProgressBar();
+    
+    // Use the quiz generator service
+    const quizCards = await quizGenerator.generateQuizFromStoredFiles(language);
+    
+    // Process and validate quiz cards
+    const processedCards = quizGenerator.processQuizCards(quizCards);
+    
+    if (processedCards.length === 0) {
+      alert("No valid quiz questions could be generated. Please try with different files.");
       return;
     }
-    const container = document.getElementById("quizContainer");
-    data.quizCards.forEach((card, index) => {
-      const cardEl = document.createElement("div");
-      cardEl.className = "bg-zinc-700 p-4 rounded-lg shadow";
-      const questionId = `quiz-${index}`;
-      cardEl.innerHTML = `
-        <h2 class="font-semibold text-white mb-2">Card ${index + 1}</h2>
-        <pre class="bg-zinc-800 p-2 rounded text-gray-300 text-sm mb-2">${card.snippet || ''}</pre>
-        <strong class="text-white">Question:</strong>
-        <p class="text-gray-200 mb-2">${card.quiz.question}</p>
-      `;
-      if (card.quiz.type === "drag-and-drop") {
-        const quizBox = document.createElement("div");
-        quizBox.className = "sortable-options space-y-2 p-2 bg-zinc-800 rounded";
-        quizBox.id = questionId;
-        card.quiz.options.forEach(opt => {
-          const line = document.createElement("div");
-          line.className = "p-2 bg-zinc-600 rounded cursor-move";
-          line.textContent = opt;
-          quizBox.appendChild(line);
-        });
-        const button = document.createElement("button");
-        button.textContent = "✅ Check Order";
-        button.className = "mt-2 px-3 py-1 text-sm bg-blue-500 hover:bg-blue-600 rounded";
-        button.addEventListener("click", () => {
-          checkDragOrder(questionId, card.quiz.answer);
-        });
-        cardEl.appendChild(quizBox);
-        cardEl.appendChild(button);
-        new Sortable(quizBox, { animation: 150 });
-      } else if (card.quiz.type === "multiple-choice") {
-        card.quiz.options.forEach(opt => {
-          const wrapper = document.createElement("div");
-          const input = document.createElement("input");
-          input.type = "radio";
-          input.name = `q${index}`;
-          input.value = opt;
-          const label = document.createElement("label");
-          label.textContent = opt;
-          wrapper.appendChild(input);
-          wrapper.appendChild(label);
-          cardEl.appendChild(wrapper);
-        });
-        const button = document.createElement("button");
-        button.textContent = "✅ Reveal Answer";
-        button.className = "mt-2 px-3 py-1 text-sm bg-blue-500 hover:bg-blue-600 rounded";
-        button.addEventListener("click", () => {
-          alert(`Answer: ${card.quiz.answer}`);
-        });
-        cardEl.appendChild(button);
-      } else {
-        const input = document.createElement("input");
-        input.type = "text";
-        input.className = "w-full p-2 rounded bg-zinc-800 border border-zinc-600";
-        input.placeholder = "Your answer...";
-        const button = document.createElement("button");
-        button.textContent = "✅ Reveal Answer";
-        button.className = "mt-2 px-3 py-1 text-sm bg-blue-500 hover:bg-blue-600 rounded";
-        button.addEventListener("click", () => {
-          alert(`Answer: ${card.quiz.answer}`);
-        });
-        cardEl.appendChild(input);
-        cardEl.appendChild(button);
-      }
-      container.appendChild(cardEl);
-    });
-  } catch (err) {
-    console.error("Quiz Error:", err);
-    alert("Failed to generate quiz.");
+    
+    // Display quiz cards using the QuizCard component
+    displayQuizCards(processedCards);
+    
+  } catch (error) {
+    console.error("Quiz generation error:", error);
+    alert(`Failed to generate quiz: ${error.message}`);
   } finally {
-    document.getElementById("loadingSpinner").classList.add("hidden");
+    hideProgressBar();
   }
 }
 
-function checkDragOrder(containerId, correctAnswerArray) {
-  const container = document.getElementById(containerId);
-  const userOrder = Array.from(container.children).map(el => el.innerText.trim());
-  const isCorrect =
-    userOrder.length === correctAnswerArray.length &&
-    userOrder.every((line, i) => line === correctAnswerArray[i]);
-  const oldResult = container.parentElement.querySelector(".check-result");
-  if (oldResult) oldResult.remove();
-  const result = document.createElement("div");
-  result.className = "check-result mt-2 font-semibold";
-  result.textContent = isCorrect ? "✅ Correct!" : "❌ Incorrect. Try again!";
-  result.classList.add(isCorrect ? "text-green-500" : "text-red-500");
-  container.parentElement.appendChild(result);
+async function generateFunctionVariantQuiz() {
+  const language = document.getElementById("language").value;
+  
+  try {
+    // Get stored files from backend
+    const response = await fetch(`${BACKEND_URL}/getStoredFiles`);
+    if (!response.ok) {
+      throw new Error(`Failed to get stored files: ${response.status}`);
+    }
+    
+    const { files } = await response.json();
+    if (!files || files.length === 0) {
+      alert("No files found. Please upload files or load a repository first.");
+      return;
+    }
+    
+    // Show progress bar
+    showProgressBar();
+    
+    // Generate function variant quiz
+    const response2 = await fetch(`${BACKEND_URL}/generateFunctionVariantQuiz`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ repoFiles: files, language })
+    });
+    
+    if (!response2.ok) {
+      const errorData = await response2.json();
+      throw new Error(errorData.error || `Failed to generate function variant quiz: ${response2.status}`);
+    }
+    
+    const { quizCards } = await response2.json();
+    
+    if (!quizCards || quizCards.length === 0) {
+      alert("No function variant questions could be generated. Please try with different files.");
+      return;
+    }
+    
+    // Display quiz cards using the QuizCard component
+    displayQuizCards(quizCards);
+    
+  } catch (error) {
+    console.error("Function variant quiz generation error:", error);
+    alert(`Failed to generate function variant quiz: ${error.message}`);
+  } finally {
+    hideProgressBar();
+  }
+}
+
+// Display quiz cards using the modular component
+function displayQuizCards(cards) {
+  const container = document.getElementById("quizContainer");
+  container.innerHTML = "";
+  
+  cards.forEach((cardData, index) => {
+    const quizCard = new QuizCard(cardData, index);
+    const cardElement = quizCard.createCardElement();
+    container.appendChild(cardElement);
+  });
+}
+
+// Progress bar functions
+function showProgressBar() {
+  const progressContainer = document.getElementById("progressContainer");
+  const progressBarFill = document.getElementById("progressBarFill");
+  const progressText = document.getElementById("progressText");
+  
+  if (progressContainer) {
+    progressContainer.classList.remove("hidden");
+    progressBarFill.style.width = "0%";
+    progressText.textContent = "Generating quiz questions...";
+    
+    // Animate progress bar
+    let progress = 0;
+    const interval = setInterval(() => {
+      progress += Math.random() * 15;
+      if (progress > 90) progress = 90; // Don't go to 100% until actually done
+      progressBarFill.style.width = progress + "%";
+    }, 500);
+    
+    // Store interval ID for cleanup
+    progressContainer.dataset.intervalId = interval;
+  }
+}
+
+function hideProgressBar() {
+  const progressContainer = document.getElementById("progressContainer");
+  const progressBarFill = document.getElementById("progressBarFill");
+  const progressText = document.getElementById("progressText");
+  
+  if (progressContainer) {
+    // Complete the progress bar
+    progressBarFill.style.width = "100%";
+    progressText.textContent = "Quiz generated successfully!";
+    
+    // Clear the interval
+    const intervalId = progressContainer.dataset.intervalId;
+    if (intervalId) {
+      clearInterval(parseInt(intervalId));
+    }
+    
+    // Hide after a short delay
+    setTimeout(() => {
+      progressContainer.classList.add("hidden");
+    }, 1000);
+  }
 }
