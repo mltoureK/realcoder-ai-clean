@@ -16,7 +16,6 @@ document.addEventListener("DOMContentLoaded", function () {
   document.getElementById("folderInput").addEventListener("change", handleFolderUpload);
   document.getElementById("loadRepoButton").addEventListener("click", handleRepoLoad);
   document.getElementById("generateQuizButton").addEventListener("click", generateQuizFromStoredFiles);
-  document.getElementById("generateFunctionVariantButton").addEventListener("click", generateFunctionVariantQuiz);
 });
 
 async function handleFolderUpload(event) {
@@ -190,54 +189,7 @@ async function generateQuizFromStoredFiles() {
   }
 }
 
-async function generateFunctionVariantQuiz() {
-  const language = document.getElementById("language").value;
-  
-  try {
-    // Get stored files from backend
-    const response = await fetch(`${BACKEND_URL}/getStoredFiles`);
-    if (!response.ok) {
-      throw new Error(`Failed to get stored files: ${response.status}`);
-    }
-    
-    const { files } = await response.json();
-    if (!files || files.length === 0) {
-      alert("No files found. Please upload files or load a repository first.");
-      return;
-    }
-    
-    // Show progress bar
-    showProgressBar();
-    
-    // Generate function variant quiz
-    const response2 = await fetch(`${BACKEND_URL}/generateFunctionVariantQuiz`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ repoFiles: files, language })
-    });
-    
-    if (!response2.ok) {
-      const errorData = await response2.json();
-      throw new Error(errorData.error || `Failed to generate function variant quiz: ${response2.status}`);
-    }
-    
-    const { quizCards } = await response2.json();
-    
-    if (!quizCards || quizCards.length === 0) {
-      alert("No function variant questions could be generated. Please try with different files.");
-      return;
-    }
-    
-    // Display quiz cards using the QuizCard component
-    displayQuizCards(quizCards);
-    
-  } catch (error) {
-    console.error("Function variant quiz generation error:", error);
-    alert(`Failed to generate function variant quiz: ${error.message}`);
-  } finally {
-    hideProgressBar();
-  }
-}
+
 
 // Display quiz cards using the modular component
 function displayQuizCards(cards) {

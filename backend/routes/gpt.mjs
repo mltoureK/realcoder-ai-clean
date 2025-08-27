@@ -70,7 +70,7 @@ router.post('/sendSMS', async (req, res) => {
               "To manage application state",
               "To perform calculations"
             ],
-            answer: ["To process data"],
+            answer: "A",
             resource: {
               title: "Code Analysis",
               link: "https://developer.mozilla.org/en-US/docs/Web/JavaScript"
