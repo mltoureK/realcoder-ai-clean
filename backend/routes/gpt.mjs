@@ -43,6 +43,32 @@ router.post('/sendSMS', async (req, res) => {
       console.log('Calling generateQuizFromCode...');
       const quizCards = await generateQuizFromCode(limitedCode, language, message);
       console.log('Quiz generation successful, returning cards:', quizCards.length);
+      
+      // Add debugging for empty results
+      if (!quizCards || quizCards.length === 0) {
+        console.log('WARNING: No quiz cards generated - returning fallback');
+        const fallbackQuiz = [{
+          snippet: "Code analysis completed with fallback",
+          quiz: {
+            type: "multiple-choice",
+            question: "What is the primary purpose of this code?",
+            options: [
+              "To process data",
+              "To handle user input", 
+              "To manage application state",
+              "To perform calculations"
+            ],
+            answer: "A",
+            resource: {
+              title: "Code Analysis",
+              link: "https://developer.mozilla.org/en-US/docs/Web/JavaScript"
+            }
+          }
+        }];
+        res.json({ quizCards: fallbackQuiz, fallback: true });
+        return;
+      }
+      
       res.json({ quizCards });
     } catch (err) {
       console.error("Quiz Gen Error:", err);

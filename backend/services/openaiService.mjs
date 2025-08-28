@@ -182,10 +182,10 @@ Return ONLY valid JSON array.`
       console.log('Raw Multiple Choice Response First 200 chars:', multipleChoiceText.substring(0, 200));
       
       const codeBlockMatch = multipleChoiceText.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-      if (codeBlockMatch) {
+    if (codeBlockMatch) {
         multipleChoiceText = codeBlockMatch[1].trim();
         console.log('Found code block, extracted text');
-      } else {
+    } else {
         console.log('No code block found, using raw text');
       }
       
@@ -207,42 +207,19 @@ Return ONLY valid JSON array.`
       let functionVariantText = functionVariantCompletion.choices[0].message.content.trim();
       console.log('Raw Function Variant Response:', functionVariantText);
       
-      // Extract all JSON objects from the markdown response
-      const jsonObjectMatches = functionVariantText.match(/```json\s*(\{[\s\S]*?\})\s*```/g);
-      if (jsonObjectMatches) {
-        console.log('Found JSON objects in markdown:', jsonObjectMatches.length);
-        const allVariants = [];
-        
-        for (const match of jsonObjectMatches) {
-          try {
-            const jsonText = match.replace(/```json\s*/, '').replace(/\s*```/, '');
-            // Clean up template literals that might break JSON parsing
-            const cleanedJson = jsonText.replace(/`/g, "'").replace(/\${/g, "${");
-            const parsed = JSON.parse(cleanedJson);
-            if (parsed && typeof parsed === 'object') {
-              allVariants.push(parsed);
-            }
-          } catch (parseError) {
-            console.error('Error parsing individual JSON object:', parseError);
-            console.error('Problematic JSON text:', jsonText);
-          }
-        }
-        
-        functionVariantCards = allVariants;
+      // Extract JSON from markdown if present
+      const codeBlockMatch = functionVariantText.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+      if (codeBlockMatch) {
+        functionVariantText = codeBlockMatch[1].trim();
+        console.log('Found code block, extracted text');
       } else {
-        // Fallback to old parsing method
-        const codeBlockMatch = functionVariantText.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-        if (codeBlockMatch) {
-          functionVariantText = codeBlockMatch[1].trim();
-        }
-        console.log('Parsed Function Variant Text:', functionVariantText);
-        
-        // Clean up template literals before parsing
-        const cleanedText = functionVariantText.replace(/`/g, "'").replace(/\${/g, "${");
-        const parsed = JSON.parse(cleanedText);
-        functionVariantCards = Array.isArray(parsed) ? parsed : [parsed];
+        console.log('No code block found, using raw text');
       }
       
+      console.log('Parsed Function Variant Text:', functionVariantText);
+      
+      const parsed = JSON.parse(functionVariantText);
+      functionVariantCards = Array.isArray(parsed) ? parsed : [];
       console.log('Function Variant Cards:', functionVariantCards.length);
     } catch (error) {
       console.error('Error parsing function-variant questions:', error);
@@ -264,7 +241,7 @@ Return ONLY valid JSON array.`
         
         return {
           ...card,
-          quiz: {
+      quiz: {
             ...card.quiz,
             options: shuffledOptions,
             answer: newAnswer
@@ -305,6 +282,68 @@ Return ONLY valid JSON array.`
     const allQuizCards = [...multipleChoiceCards, ...functionVariantCards];
     
     console.log('Quiz generation successful, returning cards:', allQuizCards.length);
+    console.log('Multiple choice cards:', multipleChoiceCards.length);
+    console.log('Function variant cards:', functionVariantCards.length);
+    
+    // If no cards were generated, return fallback cards
+    if (allQuizCards.length === 0) {
+      console.log('WARNING: No quiz cards generated, using fallback');
+      const fallbackCards = [
+        {
+          snippet: "Code Analysis",
+          quiz: {
+            type: "multiple-choice",
+            question: "What is the primary purpose of this code?",
+            options: [
+              "To process data and handle user interactions",
+              "To manage application state and routing",
+              "To perform calculations and data transformations",
+              "To handle API calls and data fetching"
+            ],
+            answer: "A",
+            resource: {
+              title: "Code Analysis",
+              link: "https://developer.mozilla.org/en-US/docs/Web/JavaScript"
+            }
+          }
+        },
+        {
+          snippet: "Function Implementation",
+          quiz: {
+            type: "function-variant",
+            question: "Which version correctly implements an async function?",
+            variants: [
+              {
+                id: "A",
+                code: "async function fetchData() {\n  const response = await fetch('/api/data');\n  return response.json();\n}",
+                isCorrect: true,
+                explanation: "Correct: Properly uses async/await syntax."
+              },
+              {
+                id: "B",
+                code: "function fetchData() {\n  const response = await fetch('/api/data');\n  return response.json();\n}",
+                isCorrect: false,
+                explanation: "Bug: Missing async keyword."
+              },
+              {
+                id: "C",
+                code: "async function fetchData() {\n  const response = fetch('/api/data');\n  return response.json();\n}",
+                isCorrect: false,
+                explanation: "Bug: Missing await keyword."
+              },
+              {
+                id: "D",
+                code: "async function fetchData() {\n  const response = await fetch('/api/data');\n  return response;\n}",
+                isCorrect: false,
+                explanation: "Bug: Missing .json() call."
+              }
+            ]
+          }
+        }
+      ];
+      return fallbackCards;
+    }
+    
     return allQuizCards;
   } catch (error) {
     console.error('Quiz generation error:', error);

@@ -1,38 +1,39 @@
 export const javascriptPrompts = {
   multipleChoice: {
-    system: `You are an expert JavaScript instructor. You MUST return ONLY valid JSON. Do NOT include any markdown, HTML, or explanatory text.`,
+    system: `You are an expert JavaScript instructor creating educational quiz questions. You MUST return ONLY valid JSON. Do NOT include any markdown, HTML, or explanatory text.`,
     
-    user: (code) => `Create 3 multiple-choice questions about this JavaScript code:
+    user: (code) => `Create 3 multiple-choice questions that test understanding of the ACTUAL code provided:
 
 ${code}
 
-RULES:
-1. Return ONLY a JSON array - no other text
-2. Use ACTUAL functions, variables, and patterns from the provided code
-3. Ask about specific implementation details, not general concepts
-4. Randomize answer positions (A, B, C, D)
-5. Include code snippets in the question to show the actual code being tested
-6. Use this exact format:
+EDUCATIONAL REQUIREMENTS:
+1. Questions must test understanding of SPECIFIC functions, variables, and patterns from the provided code
+2. Focus on WHY certain approaches were chosen and HOW the code works
+3. Test understanding of the code's purpose, logic, and implementation details
+4. Use actual function names, variable names, and patterns from the code
+5. Randomize answer positions (A, B, C, D)
+
+Return ONLY a JSON array with this exact format:
 
 [
   {
-    "snippet": "Clear description of the specific function, feature, or code pattern being tested",
+    "snippet": "Specific function or feature being tested",
     "quiz": {
       "type": "multiple-choice",
-      "question": "Looking at this code snippet:\n\n\`\`\`javascript\n// Show the actual code snippet here\nfunction example() {\n  // actual code from the provided code\n}\n\`\`\`\n\nWhat does this code do?",
-      "options": ["Specific option A", "Specific option B", "Specific option C", "Specific option D"],
+      "question": "Question about the specific code implementation and logic?",
+      "options": [
+        "Answer that shows understanding of the actual code",
+        "Answer that misunderstands the code's purpose",
+        "Answer that confuses different patterns in the code",
+        "Answer that shows lack of understanding of the specific implementation"
+      ],
       "answer": "A",
-      "explanation": "Why this specific answer is correct based on the code"
+      "explanation": "Why this answer is correct based on the actual code logic and purpose"
     }
   }
 ]
 
-IMPORTANT: 
-- Questions must be about the ACTUAL code provided, not general JavaScript concepts
-- Use specific function names, variable names, and patterns from the code
-- Include the actual code snippet in the question using \`\`\`javascript\`\`\` blocks
-- Make questions self-contained by showing the relevant code
-- Snippets should clearly describe what part of the code the question is testing
+IMPORTANT: Questions must test understanding of the ACTUAL code provided, not general JavaScript concepts. Focus on the specific implementation, purpose, and logic of the functions and patterns in the code.
 
 NO MARKDOWN. NO HTML. ONLY JSON.`,
 
@@ -54,63 +55,62 @@ NO MARKDOWN. NO HTML. ONLY JSON.`,
   },
 
   functionVariant: {
-    system: `You are an expert JavaScript instructor. You MUST return ONLY valid JSON. Do NOT include any markdown, HTML, or explanatory text.`,
+    system: `You are an expert JavaScript instructor creating educational quiz questions. You MUST return ONLY valid JSON. Do NOT include any markdown, HTML, or explanatory text.`,
     
-    user: (code) => `Create 2 function-variant questions about this JavaScript code:
+    user: (code) => `CRITICAL: You MUST analyze the ACTUAL code provided below and create questions based ONLY on the specific functions, variables, and patterns found in that code. DO NOT use generic examples.
+
+Create 2 function-variant questions that test understanding of the ACTUAL code provided:
 
 ${code}
 
-RULES:
-1. Return ONLY a JSON array - no other text
-2. Use ACTUAL functions, variables, and patterns from the provided code
-3. Create subtle bugs in the variants (missing semicolons, wrong variable names, etc.)
-4. Randomize answer positions (A, B, C, D)
-5. Create descriptive snippets that clearly explain what the question is about
-6. Use this exact format:
+MANDATORY REQUIREMENTS:
+1. You MUST use ONLY functions, variables, and patterns that actually exist in the provided code
+2. You MUST reference specific function names, variable names, and code patterns from the provided code
+3. You MUST NOT use generic examples like "fetchData", "sumArray", etc. unless they actually exist in the code
+4. Each question MUST be about a specific function or feature that is actually present in the provided code
+5. The variants MUST be based on the actual implementation details from the provided code
+6. Each question MUST have exactly 4 variants (A, B, C, D) - no more, no less
+7. NO COMMENTS in the code variants - just pure code
+
+Return ONLY a JSON array with this exact format:
 
 [
   {
-    "snippet": "Clear description of the specific function or feature being tested with function-variant bugs",
+    "snippet": "Name of the actual function or feature from the provided code",
     "quiz": {
       "type": "function-variant",
-      "question": "Which version correctly implements this function?",
+      "question": "Which version correctly implements the [ACTUAL FUNCTION NAME] from the provided code?",
       "variants": [
         {
           "id": "A",
-          "code": "// Correct version\nfunction example() {\n  // correct code here\n}",
+          "code": "// Use the ACTUAL function name and implementation from the provided code",
           "isCorrect": true,
-          "explanation": "Correct: This version works properly."
+          "explanation": "Correct: This version properly implements the actual function from the provided code."
         },
         {
           "id": "B", 
-          "code": "// Buggy version\nfunction example() {\n  // buggy code here\n}",
+          "code": "// Create a buggy version of the ACTUAL function from the provided code",
           "isCorrect": false,
-          "explanation": "Bug: Missing semicolon or other issue."
+          "explanation": "Bug: This version has an error in the actual function implementation."
         },
         {
           "id": "C",
-          "code": "// Another buggy version\nfunction example() {\n  // more buggy code\n}",
+          "code": "// Create another buggy version of the ACTUAL function from the provided code",
           "isCorrect": false,
-          "explanation": "Bug: Wrong variable name or logic error."
+          "explanation": "Bug: This version has a different error in the actual function implementation."
         },
         {
           "id": "D",
-          "code": "// Yet another buggy version\nfunction example() {\n  // even more buggy code\n}",
+          "code": "// Create a third buggy version of the ACTUAL function from the provided code",
           "isCorrect": false,
-          "explanation": "Bug: Incorrect function call or syntax error."
+          "explanation": "Bug: This version has another error in the actual function implementation."
         }
       ]
     }
   }
 ]
 
-IMPORTANT: 
-- Questions must be about the ACTUAL code provided, not general JavaScript concepts
-- Use specific function names, variable names, and patterns from the code
-- Snippets should clearly describe what function or feature is being tested
-- Make snippets descriptive and informative
-
-NO MARKDOWN. NO HTML. ONLY JSON.`,
+CRITICAL: If you cannot find specific functions or patterns in the provided code, DO NOT generate generic questions. Instead, analyze the code structure, variable names, or any other specific elements that are actually present.`,
 
     fallback: {
       snippet: "JavaScript Function Implementation",
