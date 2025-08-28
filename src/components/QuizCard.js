@@ -199,7 +199,7 @@ export class QuizCard {
       <div class="function-variant">
         <label class="variant-option">
           <input type="radio" name="q${this.index}" value="${variant.id}">
-          <span class="variant-label">Version ${variant.id}</span>
+          <span class="variant-label">Option ${variant.id}</span>
         </label>
         <div class="variant-code">
           <pre><code>${this.escapeHtml(this.formatCode(variant.code))}</code></pre>
@@ -321,26 +321,43 @@ export class QuizCard {
     this.isAnswered = true;
     
     // Check if answer is correct
-    const correctAnswers = Array.isArray(this.cardData.quiz.answer) 
-      ? this.cardData.quiz.answer 
-      : [this.cardData.quiz.answer];
-    
+    const correctAnswer = this.cardData.quiz.answer;
     const selectedOption = this.cardData.quiz.options[value];
-    this.isCorrect = correctAnswers.includes(selectedOption);
+    
+    // Convert answer to option text for comparison
+    const correctOptionIndex = this.getCorrectOptionIndex();
+    this.isCorrect = (value == correctOptionIndex); // Use == for string/number comparison
     
     // Update UI
     this.updateAnswerUI(cardEl);
   }
 
+  // Get the index of the correct option
+  getCorrectOptionIndex() {
+    const correctAnswer = this.cardData.quiz.answer;
+    if (typeof correctAnswer === 'string') {
+      // Convert A=0, B=1, C=2, D=3
+      return correctAnswer.charCodeAt(0) - 65;
+    }
+    return correctAnswer;
+  }
+
   // Update answer UI
   updateAnswerUI(cardEl) {
     const options = cardEl.querySelectorAll('.option');
+    const correctIndex = this.getCorrectOptionIndex();
+    
     options.forEach((option, index) => {
       const radio = option.querySelector('input[type="radio"]');
       const text = option.querySelector('.option-text');
       
       if (radio.checked) {
         option.classList.add(this.isCorrect ? 'correct' : 'incorrect');
+      }
+      
+      // Also highlight the correct answer if user selected wrong one
+      if (!this.isCorrect && index === correctIndex) {
+        option.classList.add('correct');
       }
     });
   }
