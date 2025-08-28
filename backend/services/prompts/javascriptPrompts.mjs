@@ -11,7 +11,7 @@ RULES:
 2. Use ACTUAL functions, variables, and patterns from the provided code
 3. Ask about specific implementation details, not general concepts
 4. Randomize answer positions (A, B, C, D)
-5. Create descriptive snippets that clearly explain what the question is about
+5. Include code snippets in the question to show the actual code being tested
 6. Use this exact format:
 
 [
@@ -19,7 +19,7 @@ RULES:
     "snippet": "Clear description of the specific function, feature, or code pattern being tested",
     "quiz": {
       "type": "multiple-choice",
-      "question": "Specific question about the actual code implementation?",
+      "question": "Looking at this code snippet:\n\n\`\`\`javascript\n// Show the actual code snippet here\nfunction example() {\n  // actual code from the provided code\n}\n\`\`\`\n\nWhat does this code do?",
       "options": ["Specific option A", "Specific option B", "Specific option C", "Specific option D"],
       "answer": "A",
       "explanation": "Why this specific answer is correct based on the code"
@@ -30,8 +30,9 @@ RULES:
 IMPORTANT: 
 - Questions must be about the ACTUAL code provided, not general JavaScript concepts
 - Use specific function names, variable names, and patterns from the code
+- Include the actual code snippet in the question using \`\`\`javascript\`\`\` blocks
+- Make questions self-contained by showing the relevant code
 - Snippets should clearly describe what part of the code the question is testing
-- Make snippets descriptive and informative
 
 NO MARKDOWN. NO HTML. ONLY JSON.`,
 

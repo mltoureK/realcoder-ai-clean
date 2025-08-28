@@ -885,3 +885,38 @@ body {
     grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
   }
 }
+
+/* Question code snippet styling */
+.question-code-snippet {
+  background-color: #1f2937;
+  border: 1px solid #4b5563;
+  border-radius: 0.375rem;
+  margin: 1rem 0;
+  overflow: hidden;
+}
+
+.question-code-snippet pre {
+  margin: 0;
+  padding: 1rem;
+  background-color: #1f2937;
+  color: #f3f4f6;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  overflow-x: auto;
+}
+
+.question-code-snippet code {
+  background: none;
+  padding: 0;
+  color: inherit;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+.question-text {
+  margin-bottom: 1rem;
+  line-height: 1.6;
+}
+
+.question-text p {
+  margin-bottom: 1rem;
+}

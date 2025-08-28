@@ -91,6 +91,9 @@ export class QuizCard {
 
   // Render multiple choice options
   renderMultipleChoice() {
+    // Format the question text to handle code snippets
+    const formattedQuestion = this.formatQuestionWithCode(this.cardData.quiz.question);
+    
     const options = this.cardData.quiz.options.map((option, i) => `
       <label class="option">
         <input type="radio" name="q${this.index}" value="${i}" onchange="this.handleAnswerSelect(${i})">
@@ -98,7 +101,18 @@ export class QuizCard {
       </label>
     `).join('');
     
-    return `<div class="options">${options}</div>`;
+    return `
+      <div class="question-text">${formattedQuestion}</div>
+      <div class="options">${options}</div>
+    `;
+  }
+
+  // Format question text to handle code snippets
+  formatQuestionWithCode(questionText) {
+    // Replace markdown code blocks with formatted HTML
+    return questionText.replace(/```javascript\n([\s\S]*?)\n```/g, (match, code) => {
+      return `<div class="question-code-snippet"><pre><code>${this.escapeHtml(code.trim())}</code></pre></div>`;
+    });
   }
 
   // Render drag and drop interface
